@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Driver Save - Connect with Professional Drivers",
+  title: "Drivers24 - Connect with Professional Drivers",
   description: "Find verified drivers in your city or register as a driver",
 };
 

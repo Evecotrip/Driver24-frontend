@@ -95,7 +95,7 @@ export default function Home() {
 
           <div className="space-y-4">
             <h1 className="text-5xl font-bold tracking-tight sm:text-6xl lg:text-7xl">
-              Driver Save
+              Drivers24
             </h1>
             <p className="mx-auto max-w-2xl text-xl text-black/60 dark:text-white/60">
               Connect with verified professional drivers in your city or register as a driver to expand your opportunities

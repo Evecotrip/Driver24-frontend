@@ -35,7 +35,7 @@ export function Navbar() {
               <circle cx="17" cy="17" r="2" />
             </svg>
           </div>
-          <span className="text-xl font-bold">Driver Save</span>
+          <span className="text-xl font-bold">Drivers24</span>
         </Link>
 
         <div className="flex items-center space-x-4">

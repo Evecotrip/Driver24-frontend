@@ -262,7 +262,7 @@ export default function UserDashboard() {
             <div className="flex gap-4">
               <Input
                 type="text"
-                placeholder="e.g., Mumbai, Delhi, Bangalore"
+                placeholder="Search here"
                 value={searchCity}
                 onChange={(e) => setSearchCity(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -381,12 +381,11 @@ export default function UserDashboard() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-2">
-                {driver.vehicleType && (
+                {driver.salaryExpectation && (
                   <div className="flex items-center text-sm">
-                    <span className="font-medium">Vehicle:</span>
+                    <span className="font-medium">Salary:</span>
                     <span className="ml-2 text-black/60 dark:text-white/60">
-                      {driver.vehicleType}
-                      {driver.vehicleModel && ` - ${driver.vehicleModel}`}
+                      {'₹' + driver?.salaryExpectation + '/month' || 'NA'}
                     </span>
                   </div>
                 )}
@@ -398,18 +397,7 @@ export default function UserDashboard() {
                     </span>
                   </div>
                 )}
-                <div className="flex items-center text-sm">
-                  <span className="font-medium">Status:</span>
-                  <span
-                    className={`ml-2 ${
-                      driver.availability
-                        ? "text-green-600 dark:text-green-400"
-                        : "text-red-600 dark:text-red-400"
-                    }`}
-                  >
-                    {driver.availability ? "Available" : "Unavailable"}
-                  </span>
-                </div>
+                
                 <div className="mt-4 flex gap-2">
                   <Button 
                     className="flex-1" 
@@ -546,26 +534,8 @@ export default function UserDashboard() {
             {/* Vehicle Information */}
             {(selectedDriver.vehicleType || selectedDriver.vehicleModel || selectedDriver.vehicleNumber) && (
               <div>
-                <h4 className="mb-3 text-lg font-semibold">Vehicle Information</h4>
+                <h4 className="mb-3 text-lg font-semibold">Basic Information</h4>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {selectedDriver.vehicleType && (
-                    <div className="rounded-lg border-2 border-black/10 p-3 dark:border-white/10">
-                      <p className="text-sm text-black/60 dark:text-white/60">Vehicle Type</p>
-                      <p className="font-medium">{selectedDriver.vehicleType}</p>
-                    </div>
-                  )}
-                  {selectedDriver.vehicleModel && (
-                    <div className="rounded-lg border-2 border-black/10 p-3 dark:border-white/10">
-                      <p className="text-sm text-black/60 dark:text-white/60">Model</p>
-                      <p className="font-medium">{selectedDriver.vehicleModel}</p>
-                    </div>
-                  )}
-                  {selectedDriver.vehicleNumber && (
-                    <div className="rounded-lg border-2 border-black/10 p-3 dark:border-white/10">
-                      <p className="text-sm text-black/60 dark:text-white/60">Vehicle Number</p>
-                      <p className="font-medium">{selectedDriver.vehicleNumber.slice(0, 5) + "..."}</p>
-                    </div>
-                  )}
                   {selectedDriver.experience && (
                     <div className="rounded-lg border-2 border-black/10 p-3 dark:border-white/10">
                       <p className="text-sm text-black/60 dark:text-white/60">Experience</p>

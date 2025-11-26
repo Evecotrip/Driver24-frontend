@@ -1,6 +1,6 @@
-# Driver Save Frontend
+# Drivers24 Frontend
 
-Modern Next.js frontend for the Driver Save platform - connecting users with verified professional drivers.
+Modern Next.js frontend for the Drivers24 platform - connecting users with verified professional drivers.
 
 ## Features
 
