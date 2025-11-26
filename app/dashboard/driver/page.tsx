@@ -429,9 +429,10 @@ export default function DriverDashboard() {
                   </div>
                   <div>
                     <label className="mb-2 block text-sm font-medium">
-                      State
+                      State *
                     </label>
                     <Input
+                      required
                       value={formData.state}
                       onChange={(e) =>
                         setFormData({ ...formData, state: e.target.value })
@@ -440,15 +441,17 @@ export default function DriverDashboard() {
                   </div>
                   <div>
                     <label className="mb-2 block text-sm font-medium">
-                      Pincode
+                      Pincode *
                     </label>
                     <Input
+                      required
                       value={formData.pincode}
                       onChange={(e) =>
                         setFormData({ ...formData, pincode: e.target.value })
                       }
                     />
                   </div>
+                  {/*
                   <div>
                     <label className="mb-2 block text-sm font-medium">
                       Vehicle Type
@@ -485,6 +488,7 @@ export default function DriverDashboard() {
                       }
                     />
                   </div>
+                  */}
                   <div>
                     <label className="mb-2 block text-sm font-medium">
                       Experience (years)
