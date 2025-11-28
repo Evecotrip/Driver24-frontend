@@ -38,6 +38,7 @@ export default function SelectRolePage() {
         store.setToken(response.data.token)
         store.setUserData({
           id: response.data.user.id,
+          clerkId: user.id,
           email: response.data.user.email,
           role: response.data.user.role,
           city: response.data.user.city,
@@ -92,8 +93,8 @@ export default function SelectRolePage() {
             <div className="grid gap-6 sm:grid-cols-2">
               <Card
                 className={`cursor-pointer transition-all duration-300 hover:-translate-y-1 ${selectedRole === "USER"
-                    ? "ring-2 ring-primary border-primary/50 bg-primary/10 shadow-lg shadow-primary/20"
-                    : "hover:bg-white/5"
+                  ? "ring-2 ring-primary border-primary/50 bg-primary/10 shadow-lg shadow-primary/20"
+                  : "hover:bg-white/5"
                   }`}
                 onClick={() => setSelectedRole("USER")}
               >
@@ -125,8 +126,8 @@ export default function SelectRolePage() {
 
               <Card
                 className={`cursor-pointer transition-all duration-300 hover:-translate-y-1 ${selectedRole === "DRIVER"
-                    ? "ring-2 ring-secondary border-secondary/50 bg-secondary/10 shadow-lg shadow-secondary/20"
-                    : "hover:bg-white/5"
+                  ? "ring-2 ring-secondary border-secondary/50 bg-secondary/10 shadow-lg shadow-secondary/20"
+                  : "hover:bg-white/5"
                   }`}
                 onClick={() => setSelectedRole("DRIVER")}
               >
