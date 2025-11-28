@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { selectRole } from "@/lib/api"
 import { store } from "@/lib/store"
+import { AnimatedBackground } from "@/components/ui/animated-background"
 
 export default function SelectRolePage() {
   const { user, isLoaded } = useUser()
@@ -20,7 +21,7 @@ export default function SelectRolePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!selectedRole || !city || !user) {
       setError("Please select a role and enter your city")
       return
@@ -31,7 +32,7 @@ export default function SelectRolePage() {
 
     try {
       const response = await selectRole(user.id, selectedRole, city)
-      
+
       if (response.success && response.data) {
         // Store JWT token and user data
         store.setToken(response.data.token)
@@ -61,8 +62,8 @@ export default function SelectRolePage() {
 
   if (!isLoaded) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-lg">Loading...</div>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
       </div>
     )
   }
@@ -73,31 +74,32 @@ export default function SelectRolePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-50 to-zinc-100 dark:from-zinc-950 dark:to-black">
+    <div className="relative min-h-screen overflow-hidden">
+      <AnimatedBackground />
       <Navbar />
-      
-      <main className="container mx-auto px-4 py-16">
-        <div className="mx-auto max-w-2xl">
-          <div className="mb-8 text-center">
-            <h1 className="text-4xl font-bold">Select Your Role</h1>
-            <p className="mt-2 text-black/60 dark:text-white/60">
+
+      <main className="container mx-auto px-4 py-32">
+        <div className="mx-auto max-w-2xl animate-in fade-in slide-in-from-bottom-8 duration-700">
+          <div className="mb-12 text-center space-y-4">
+            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl bg-gradient-to-b from-white to-white/60 bg-clip-text text-transparent">Select Your Role</h1>
+            <p className="text-lg text-muted-foreground">
               Choose how you want to use Drivers24
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-8">
             {/* Role Selection */}
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-6 sm:grid-cols-2">
               <Card
-                className={`cursor-pointer transition-all ${
-                  selectedRole === "USER"
-                    ? "border-black ring-2 ring-black dark:border-white dark:ring-white"
-                    : "hover:border-black/30 dark:hover:border-white/30"
-                }`}
+                className={`cursor-pointer transition-all duration-300 hover:-translate-y-1 ${selectedRole === "USER"
+                    ? "ring-2 ring-primary border-primary/50 bg-primary/10 shadow-lg shadow-primary/20"
+                    : "hover:bg-white/5"
+                  }`}
                 onClick={() => setSelectedRole("USER")}
               >
                 <CardHeader>
-                  <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-lg bg-black text-white dark:bg-white dark:text-black">
+                  <div className={`mb-4 flex h-14 w-14 items-center justify-center rounded-xl transition-colors ${selectedRole === "USER" ? "bg-primary text-white" : "bg-white/10 text-foreground"
+                    }`}>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 24 24"
@@ -106,7 +108,7 @@ export default function SelectRolePage() {
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      className="h-6 w-6"
+                      className="h-7 w-7"
                     >
                       <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
                       <circle cx="9" cy="7" r="4" />
@@ -122,15 +124,15 @@ export default function SelectRolePage() {
               </Card>
 
               <Card
-                className={`cursor-pointer transition-all ${
-                  selectedRole === "DRIVER"
-                    ? "border-black ring-2 ring-black dark:border-white dark:ring-white"
-                    : "hover:border-black/30 dark:hover:border-white/30"
-                }`}
+                className={`cursor-pointer transition-all duration-300 hover:-translate-y-1 ${selectedRole === "DRIVER"
+                    ? "ring-2 ring-secondary border-secondary/50 bg-secondary/10 shadow-lg shadow-secondary/20"
+                    : "hover:bg-white/5"
+                  }`}
                 onClick={() => setSelectedRole("DRIVER")}
               >
                 <CardHeader>
-                  <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-lg bg-black text-white dark:bg-white dark:text-black">
+                  <div className={`mb-4 flex h-14 w-14 items-center justify-center rounded-xl transition-colors ${selectedRole === "DRIVER" ? "bg-secondary text-black" : "bg-white/10 text-foreground"
+                    }`}>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 24 24"
@@ -139,7 +141,7 @@ export default function SelectRolePage() {
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      className="h-6 w-6"
+                      className="h-7 w-7"
                     >
                       <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" />
                       <circle cx="7" cy="17" r="2" />
@@ -156,7 +158,7 @@ export default function SelectRolePage() {
             </div>
 
             {/* City Input */}
-            {selectedRole && (
+            <div className={`transition-all duration-500 ${selectedRole ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}>
               <Card>
                 <CardHeader>
                   <CardTitle>Enter Your City</CardTitle>
@@ -172,14 +174,15 @@ export default function SelectRolePage() {
                     placeholder="e.g., Mumbai, Delhi, Bangalore"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
-                    required
+                    required={!!selectedRole}
+                    className="h-12 text-lg"
                   />
                 </CardContent>
               </Card>
-            )}
+            </div>
 
             {error && (
-              <div className="rounded-lg border-2 border-red-500 bg-red-50 p-4 text-red-700 dark:bg-red-950 dark:text-red-300">
+              <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-red-500 text-center animate-in fade-in slide-in-from-top-2">
                 {error}
               </div>
             )}
@@ -187,10 +190,17 @@ export default function SelectRolePage() {
             <Button
               type="submit"
               size="lg"
-              className="w-full"
+              className="w-full h-14 text-lg shadow-xl shadow-primary/20"
               disabled={!selectedRole || !city || loading}
             >
-              {loading ? "Processing..." : "Continue"}
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  Processing...
+                </div>
+              ) : (
+                "Continue"
+              )}
             </Button>
           </form>
         </div>

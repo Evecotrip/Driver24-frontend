@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { createDriverProfile, getMyDriverProfile, updateAvailability } from "@/lib/api"
 import { store } from "@/lib/store"
 import Link from "next/link"
+import { AnimatedBackground } from "@/components/ui/animated-background"
 
 interface DriverProfile {
   id: string
@@ -98,7 +99,7 @@ export default function DriverDashboard() {
       }
 
       const response = await getMyDriverProfile(token)
-      
+
       if (response.success && response.data) {
         setDriverProfile(response.data)
         setFormData({
@@ -192,94 +193,92 @@ export default function DriverDashboard() {
 
   if (!isLoaded || loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-lg">Loading...</div>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-50 to-zinc-100 dark:from-zinc-950 dark:to-black">
+    <div className="relative min-h-screen overflow-hidden">
+      <AnimatedBackground />
       <Navbar />
-      
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8 flex items-center justify-between">
+
+      <main className="container mx-auto px-4 py-24">
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div>
-            <h1 className="text-4xl font-bold">Driver Dashboard</h1>
-            <p className="mt-2 text-black/60 dark:text-white/60">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">Driver Dashboard</h1>
+            <p className="mt-2 text-muted-foreground">
               Manage your driver profile and availability
             </p>
           </div>
           {driverProfile && (
             <Link href="/dashboard/driver/requests">
-              <Button variant="outline">Booking Requests</Button>
+              <Button variant="outline" className="w-full sm:w-auto">Booking Requests</Button>
             </Link>
           )}
         </div>
 
         {success && (
-          <div className="mb-6 rounded-lg border-2 border-green-500 bg-green-50 p-4 text-green-700 dark:bg-green-950 dark:text-green-300">
+          <div className="mb-6 rounded-xl border border-green-500/20 bg-green-500/10 p-4 text-green-500 animate-in fade-in">
             {success}
           </div>
         )}
 
         {error && (
-          <div className="mb-6 rounded-lg border-2 border-red-500 bg-red-50 p-4 text-red-700 dark:bg-red-950 dark:text-red-300">
+          <div className="mb-6 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-red-500 animate-in fade-in">
             {error}
           </div>
         )}
 
         {/* Profile View */}
         {driverProfile && !showForm && (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <CardTitle>Your Profile</CardTitle>
-                    <CardDescription>
+                    <CardDescription className="mt-2">
                       {driverProfile.isVerified ? (
-                        <span className="text-green-600 dark:text-green-400">
+                        <span className="inline-flex items-center rounded-full bg-green-500/10 px-2.5 py-0.5 text-xs font-medium text-green-500 border border-green-500/20">
                           ✓ Verified Profile
                         </span>
                       ) : (
-                        <span className="text-yellow-600 dark:text-yellow-400">
+                        <span className="inline-flex items-center rounded-full bg-yellow-500/10 px-2.5 py-0.5 text-xs font-medium text-yellow-500 border border-yellow-500/20">
                           ⏳ Pending Verification
                         </span>
                       )}
                     </CardDescription>
                   </div>
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                     <Button
                       variant="outline"
                       onClick={() => setShowForm(true)}
                     >
                       Edit Profile
                     </Button>
-                    
+
                     {/* Availability Switch */}
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium">Availability:</span>
+                    <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-2">
+                      <span className="text-sm font-medium text-muted-foreground">Availability:</span>
                       <button
                         onClick={handleAvailabilityToggle}
-                        className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                          driverProfile.availability
-                            ? "bg-green-600 focus:ring-green-500"
-                            : "bg-red-600 focus:ring-red-500"
-                        }`}
+                        className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${driverProfile.availability
+                            ? "bg-green-500"
+                            : "bg-red-500"
+                          }`}
                       >
                         <span
-                          className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
-                            driverProfile.availability ? "translate-x-7" : "translate-x-1"
-                          }`}
+                          className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${driverProfile.availability ? "translate-x-6" : "translate-x-1"
+                            }`}
                         />
                       </button>
                       <span
-                        className={`text-sm font-semibold ${
-                          driverProfile.availability
-                            ? "text-green-600 dark:text-green-400"
-                            : "text-red-600 dark:text-red-400"
-                        }`}
+                        className={`text-sm font-semibold ${driverProfile.availability
+                            ? "text-green-500"
+                            : "text-red-500"
+                          }`}
                       >
                         {driverProfile.availability ? "Available" : "Unavailable"}
                       </span>
@@ -287,40 +286,40 @@ export default function DriverDashboard() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <p className="text-sm font-medium text-black/60 dark:text-white/60">Name</p>
-                  <p className="text-lg">{driverProfile.name}</p>
+              <CardContent className="grid gap-6 sm:grid-cols-2">
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-sm font-medium text-muted-foreground">Name</p>
+                  <p className="text-lg font-medium text-foreground">{driverProfile.name}</p>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-black/60 dark:text-white/60">Phone</p>
-                  <p className="text-lg">{driverProfile.phoneNumber}</p>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-sm font-medium text-muted-foreground">Phone</p>
+                  <p className="text-lg font-medium text-foreground">{driverProfile.phoneNumber}</p>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-black/60 dark:text-white/60">City</p>
-                  <p className="text-lg">{driverProfile.city}</p>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-sm font-medium text-muted-foreground">City</p>
+                  <p className="text-lg font-medium text-foreground">{driverProfile.city}</p>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-black/60 dark:text-white/60">RC Number</p>
-                  <p className="text-lg">{driverProfile.rcNumber}</p>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-sm font-medium text-muted-foreground">RC Number</p>
+                  <p className="text-lg font-medium text-foreground">{driverProfile.rcNumber}</p>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-black/60 dark:text-white/60">DL Number</p>
-                  <p className="text-lg">{driverProfile.dlNumber}</p>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-sm font-medium text-muted-foreground">DL Number</p>
+                  <p className="text-lg font-medium text-foreground">{driverProfile.dlNumber}</p>
                 </div>
                 {driverProfile.vehicleType && (
-                  <div>
-                    <p className="text-sm font-medium text-black/60 dark:text-white/60">Vehicle</p>
-                    <p className="text-lg">
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                    <p className="text-sm font-medium text-muted-foreground">Vehicle</p>
+                    <p className="text-lg font-medium text-foreground">
                       {driverProfile.vehicleType}
                       {driverProfile.vehicleModel && ` - ${driverProfile.vehicleModel}`}
                     </p>
                   </div>
                 )}
                 {driverProfile.experience && (
-                  <div>
-                    <p className="text-sm font-medium text-black/60 dark:text-white/60">Experience</p>
-                    <p className="text-lg">{driverProfile.experience} years</p>
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                    <p className="text-sm font-medium text-muted-foreground">Experience</p>
+                    <p className="text-lg font-medium text-foreground">{driverProfile.experience} years</p>
                   </div>
                 )}
               </CardContent>
@@ -330,7 +329,7 @@ export default function DriverDashboard() {
 
         {/* Profile Form */}
         {showForm && (
-          <Card>
+          <Card className="animate-in fade-in slide-in-from-bottom-8 duration-700">
             <CardHeader>
               <CardTitle>
                 {driverProfile ? "Edit Profile" : "Create Your Driver Profile"}
@@ -341,9 +340,9 @@ export default function DriverDashboard() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-6 sm:grid-cols-2">
                   <div>
-                    <label className="mb-2 block text-sm font-medium">
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
                       Full Name *
                     </label>
                     <Input
@@ -355,7 +354,7 @@ export default function DriverDashboard() {
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium">
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
                       Phone Number *
                     </label>
                     <Input
@@ -368,7 +367,7 @@ export default function DriverDashboard() {
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium">
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
                       RC Number *
                     </label>
                     <Input
@@ -380,7 +379,7 @@ export default function DriverDashboard() {
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium">
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
                       DL Number *
                     </label>
                     <Input
@@ -392,7 +391,7 @@ export default function DriverDashboard() {
                     />
                   </div>
                   <div className="sm:col-span-2">
-                    <label className="mb-2 block text-sm font-medium">
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
                       Permanent Address *
                     </label>
                     <Input
@@ -404,7 +403,7 @@ export default function DriverDashboard() {
                     />
                   </div>
                   <div className="sm:col-span-2">
-                    <label className="mb-2 block text-sm font-medium">
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
                       Operating Address *
                     </label>
                     <Input
@@ -416,7 +415,7 @@ export default function DriverDashboard() {
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium">
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
                       City *
                     </label>
                     <Input
@@ -428,7 +427,7 @@ export default function DriverDashboard() {
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium">
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
                       State *
                     </label>
                     <Input
@@ -440,7 +439,7 @@ export default function DriverDashboard() {
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium">
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
                       Pincode *
                     </label>
                     <Input
@@ -451,46 +450,8 @@ export default function DriverDashboard() {
                       }
                     />
                   </div>
-                  {/*
                   <div>
-                    <label className="mb-2 block text-sm font-medium">
-                      Vehicle Type
-                    </label>
-                    <Input
-                      placeholder="e.g., Car, Bike, Auto"
-                      value={formData.vehicleType}
-                      onChange={(e) =>
-                        setFormData({ ...formData, vehicleType: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-2 block text-sm font-medium">
-                      Vehicle Model
-                    </label>
-                    <Input
-                      placeholder="e.g., Honda City"
-                      value={formData.vehicleModel}
-                      onChange={(e) =>
-                        setFormData({ ...formData, vehicleModel: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-2 block text-sm font-medium">
-                      Vehicle Number
-                    </label>
-                    <Input
-                      placeholder="e.g., MH01AB1234"
-                      value={formData.vehicleNumber}
-                      onChange={(e) =>
-                        setFormData({ ...formData, vehicleNumber: e.target.value })
-                      }
-                    />
-                  </div>
-                  */}
-                  <div>
-                    <label className="mb-2 block text-sm font-medium">
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
                       Experience (years)
                     </label>
                     <Input
@@ -503,7 +464,7 @@ export default function DriverDashboard() {
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium">
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
                       Salary Expectation (₹/month)
                     </label>
                     <Input
@@ -518,14 +479,14 @@ export default function DriverDashboard() {
                   </div>
                 </div>
 
-                <div className="flex gap-4">
-                  <Button type="submit" disabled={saving}>
+                <div className="flex gap-4 pt-4">
+                  <Button type="submit" disabled={saving} className="shadow-lg shadow-primary/20">
                     {saving ? "Saving..." : "Save Profile"}
                   </Button>
                   {driverProfile && (
                     <Button
                       type="button"
-                      variant="outline"
+                      variant="glass"
                       onClick={() => setShowForm(false)}
                     >
                       Cancel

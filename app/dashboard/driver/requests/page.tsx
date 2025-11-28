@@ -7,10 +7,10 @@ import { Navbar } from "@/components/navbar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Modal } from "@/components/ui/modal"
-import { Input } from "@/components/ui/input"
 import { getDriverBookings, respondToBooking } from "@/lib/api"
 import { store } from "@/lib/store"
 import Link from "next/link"
+import { AnimatedBackground } from "@/components/ui/animated-background"
 
 interface Booking {
   id: string
@@ -145,15 +145,15 @@ export default function DriverRequestsPage() {
 
   const getStatusBadge = (status: string) => {
     const styles = {
-      PENDING: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
-      ACCEPTED: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
-      REJECTED: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
-      CANCELLED: "bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300",
-      COMPLETED: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+      PENDING: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
+      ACCEPTED: "bg-green-500/10 text-green-500 border-green-500/20",
+      REJECTED: "bg-red-500/10 text-red-500 border-red-500/20",
+      CANCELLED: "bg-zinc-500/10 text-zinc-500 border-zinc-500/20",
+      COMPLETED: "bg-blue-500/10 text-blue-500 border-blue-500/20"
     }
 
     return (
-      <span className={`rounded-full px-3 py-1 text-xs font-medium ${styles[status as keyof typeof styles] || styles.PENDING}`}>
+      <span className={`rounded-full px-3 py-1 text-xs font-medium border ${styles[status as keyof typeof styles] || styles.PENDING}`}>
         {status}
       </span>
     )
@@ -164,74 +164,78 @@ export default function DriverRequestsPage() {
 
   if (!isLoaded || loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-lg">Loading...</div>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-50 to-zinc-100 dark:from-zinc-950 dark:to-black">
+    <div className="relative min-h-screen overflow-hidden">
+      <AnimatedBackground />
       <Navbar />
-      
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8 flex items-center justify-between">
+
+      <main className="container mx-auto px-4 py-24">
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div>
-            <h1 className="text-4xl font-bold">Booking Requests</h1>
-            <p className="mt-2 text-black/60 dark:text-white/60">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">Booking Requests</h1>
+            <p className="mt-2 text-muted-foreground">
               Manage your booking requests from users
             </p>
           </div>
           <Link href="/dashboard/driver">
-            <Button variant="outline">← Back to Dashboard</Button>
+            <Button variant="outline" className="w-full sm:w-auto">← Back to Dashboard</Button>
           </Link>
         </div>
 
         {success && (
-          <div className="mb-6 rounded-lg border-2 border-green-500 bg-green-50 p-4 text-green-700 dark:bg-green-950 dark:text-green-300">
+          <div className="mb-6 rounded-xl border border-green-500/20 bg-green-500/10 p-4 text-green-500 animate-in fade-in">
             {success}
           </div>
         )}
 
         {error && (
-          <div className="mb-6 rounded-lg border-2 border-red-500 bg-red-50 p-4 text-red-700 dark:bg-red-950 dark:text-red-300">
+          <div className="mb-6 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-red-500 animate-in fade-in">
             {error}
           </div>
         )}
 
         {/* Pending Requests */}
-        <div className="mb-8">
-          <h2 className="mb-4 text-2xl font-bold">
-            Pending Requests ({pendingBookings.length})
+        <div className="mb-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
+          <h2 className="mb-6 text-2xl font-bold text-foreground flex items-center gap-3">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-yellow-500/10 text-yellow-500 text-sm border border-yellow-500/20">
+              {pendingBookings.length}
+            </span>
+            Pending Requests
           </h2>
           {pendingBookings.length === 0 ? (
-            <Card>
-              <CardContent className="py-8 text-center text-black/60 dark:text-white/60">
+            <Card className="border-dashed border-white/10 bg-white/5">
+              <CardContent className="py-12 text-center text-muted-foreground">
                 No pending booking requests
               </CardContent>
             </Card>
           ) : (
             <div className="grid gap-6">
-              {pendingBookings.map((booking) => (
-                <Card key={booking.id} className="border-2 border-yellow-200 dark:border-yellow-900">
+              {pendingBookings.map((booking, index) => (
+                <Card key={booking.id} className="border-l-4 border-l-yellow-500" style={{ animationDelay: `${index * 100}ms` }}>
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex items-center space-x-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-black text-white dark:bg-white dark:text-black">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-violet-600 text-white shadow-lg shadow-primary/20">
                           {booking.user.profileImageUrl ? (
                             <img
                               src={booking.user.profileImageUrl}
                               alt={booking.user.firstName || "User"}
-                              className="h-12 w-12 rounded-full"
+                              className="h-12 w-12 rounded-full object-cover"
                             />
                           ) : (
-                            <span className="text-lg font-semibold">
+                            <span className="text-lg font-bold">
                               {(booking.user.firstName || booking.user.email).charAt(0).toUpperCase()}
                             </span>
                           )}
                         </div>
                         <div>
-                          <CardTitle>
+                          <CardTitle className="text-lg bg-none text-foreground">
                             {booking.user.firstName && booking.user.lastName
                               ? `${booking.user.firstName} ${booking.user.lastName}`
                               : booking.user.email}
@@ -242,64 +246,65 @@ export default function DriverRequestsPage() {
                       {getStatusBadge(booking.status)}
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-3">
+                  <CardContent className="space-y-4">
                     <div className="grid gap-3 sm:grid-cols-2">
                       {booking.pickupLocation && (
-                        <div className="text-sm">
-                          <span className="font-medium">Pickup:</span>
-                          <span className="ml-2 text-black/60 dark:text-white/60">
+                        <div className="rounded-lg bg-white/5 p-3 border border-white/5">
+                          <span className="block text-xs text-muted-foreground mb-1">Pickup</span>
+                          <span className="font-medium text-foreground text-sm block truncate">
                             {booking.pickupLocation}
                           </span>
                         </div>
                       )}
                       {booking.dropLocation && (
-                        <div className="text-sm">
-                          <span className="font-medium">Drop:</span>
-                          <span className="ml-2 text-black/60 dark:text-white/60">
+                        <div className="rounded-lg bg-white/5 p-3 border border-white/5">
+                          <span className="block text-xs text-muted-foreground mb-1">Drop</span>
+                          <span className="font-medium text-foreground text-sm block truncate">
                             {booking.dropLocation}
                           </span>
                         </div>
                       )}
                       {booking.scheduledDate && (
-                        <div className="text-sm">
-                          <span className="font-medium">Scheduled:</span>
-                          <span className="ml-2 text-black/60 dark:text-white/60">
+                        <div className="rounded-lg bg-white/5 p-3 border border-white/5">
+                          <span className="block text-xs text-muted-foreground mb-1">Scheduled</span>
+                          <span className="font-medium text-foreground text-sm">
                             {new Date(booking.scheduledDate).toLocaleString()}
                           </span>
                         </div>
                       )}
-                      <div className="text-sm">
-                        <span className="font-medium">Requested:</span>
-                        <span className="ml-2 text-black/60 dark:text-white/60">
+                      <div className="rounded-lg bg-white/5 p-3 border border-white/5">
+                        <span className="block text-xs text-muted-foreground mb-1">Requested</span>
+                        <span className="font-medium text-foreground text-sm">
                           {new Date(booking.createdAt).toLocaleDateString()}
                         </span>
                       </div>
                     </div>
 
                     {booking.notes && (
-                      <div className="rounded-lg border-2 border-black/10 p-3 dark:border-white/10">
-                        <p className="text-sm font-medium">User's Notes:</p>
-                        <p className="mt-1 text-sm text-black/60 dark:text-white/60">
+                      <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                        <p className="text-sm font-medium text-muted-foreground mb-1">User's Notes:</p>
+                        <p className="text-sm text-foreground">
                           {booking.notes}
                         </p>
                       </div>
                     )}
 
-                    <div className="flex gap-2">
+                    <div className="flex gap-3 pt-2">
                       <Button
                         size="sm"
-                        variant="outline"
+                        variant="glass"
+                        className="flex-1"
                         onClick={() => {
                           setSelectedBooking(booking)
                           setIsModalOpen(true)
                         }}
                       >
-                        View Details
+                        Details
                       </Button>
                       <Button
                         size="sm"
                         onClick={() => handleRespond(booking, "ACCEPTED")}
-                        className="bg-green-600 hover:bg-green-700"
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-500/20"
                       >
                         Accept
                       </Button>
@@ -307,7 +312,7 @@ export default function DriverRequestsPage() {
                         size="sm"
                         variant="outline"
                         onClick={() => handleRespond(booking, "REJECTED")}
-                        className="border-red-500 text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
+                        className="flex-1 border-red-500/20 text-red-500 hover:bg-red-500/10 hover:text-red-400"
                       >
                         Reject
                       </Button>
@@ -320,38 +325,41 @@ export default function DriverRequestsPage() {
         </div>
 
         {/* Previous Responses */}
-        <div>
-          <h2 className="mb-4 text-2xl font-bold">
-            Previous Responses ({respondedBookings.length})
+        <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
+          <h2 className="mb-6 text-2xl font-bold text-foreground flex items-center gap-3">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white text-sm border border-white/20">
+              {respondedBookings.length}
+            </span>
+            History
           </h2>
           {respondedBookings.length === 0 ? (
-            <Card>
-              <CardContent className="py-8 text-center text-black/60 dark:text-white/60">
+            <Card className="border-dashed border-white/10 bg-white/5">
+              <CardContent className="py-8 text-center text-muted-foreground">
                 No previous responses
               </CardContent>
             </Card>
           ) : (
             <div className="grid gap-6">
               {respondedBookings.map((booking) => (
-                <Card key={booking.id}>
+                <Card key={booking.id} className="opacity-80 hover:opacity-100 transition-opacity">
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex items-center space-x-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-black text-white dark:bg-white dark:text-black">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white">
                           {booking.user.profileImageUrl ? (
                             <img
                               src={booking.user.profileImageUrl}
                               alt={booking.user.firstName || "User"}
-                              className="h-12 w-12 rounded-full"
+                              className="h-12 w-12 rounded-full object-cover"
                             />
                           ) : (
-                            <span className="text-lg font-semibold">
+                            <span className="text-lg font-bold">
                               {(booking.user.firstName || booking.user.email).charAt(0).toUpperCase()}
                             </span>
                           )}
                         </div>
                         <div>
-                          <CardTitle>
+                          <CardTitle className="text-lg bg-none text-foreground">
                             {booking.user.firstName && booking.user.lastName
                               ? `${booking.user.firstName} ${booking.user.lastName}`
                               : booking.user.email}
@@ -362,28 +370,28 @@ export default function DriverRequestsPage() {
                       {getStatusBadge(booking.status)}
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-3">
+                  <CardContent className="space-y-4">
                     <div className="grid gap-3 sm:grid-cols-2">
                       {booking.pickupLocation && (
-                        <div className="text-sm">
-                          <span className="font-medium">Pickup:</span>
-                          <span className="ml-2 text-black/60 dark:text-white/60">
+                        <div className="rounded-lg bg-white/5 p-3 border border-white/5">
+                          <span className="block text-xs text-muted-foreground mb-1">Pickup</span>
+                          <span className="font-medium text-foreground text-sm block truncate">
                             {booking.pickupLocation}
                           </span>
                         </div>
                       )}
                       {booking.dropLocation && (
-                        <div className="text-sm">
-                          <span className="font-medium">Drop:</span>
-                          <span className="ml-2 text-black/60 dark:text-white/60">
+                        <div className="rounded-lg bg-white/5 p-3 border border-white/5">
+                          <span className="block text-xs text-muted-foreground mb-1">Drop</span>
+                          <span className="font-medium text-foreground text-sm block truncate">
                             {booking.dropLocation}
                           </span>
                         </div>
                       )}
                       {booking.respondedAt && (
-                        <div className="text-sm">
-                          <span className="font-medium">Responded:</span>
-                          <span className="ml-2 text-black/60 dark:text-white/60">
+                        <div className="rounded-lg bg-white/5 p-3 border border-white/5">
+                          <span className="block text-xs text-muted-foreground mb-1">Responded</span>
+                          <span className="font-medium text-foreground text-sm">
                             {new Date(booking.respondedAt).toLocaleDateString()}
                           </span>
                         </div>
@@ -391,9 +399,9 @@ export default function DriverRequestsPage() {
                     </div>
 
                     {booking.driverResponse && (
-                      <div className="rounded-lg border-2 border-black/10 p-3 dark:border-white/10">
-                        <p className="text-sm font-medium">Your Response:</p>
-                        <p className="mt-1 text-sm text-black/60 dark:text-white/60">
+                      <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                        <p className="text-sm font-medium text-muted-foreground mb-1">Your Response:</p>
+                        <p className="text-sm text-foreground">
                           {booking.driverResponse}
                         </p>
                       </div>
@@ -401,7 +409,8 @@ export default function DriverRequestsPage() {
 
                     <Button
                       size="sm"
-                      variant="outline"
+                      variant="glass"
+                      className="w-full"
                       onClick={() => {
                         setSelectedBooking(booking)
                         setIsModalOpen(true)
@@ -427,72 +436,71 @@ export default function DriverRequestsPage() {
         title="Booking Details"
       >
         {selectedBooking && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {/* User Info */}
-            <div className="rounded-lg border-2 border-black/10 p-4 dark:border-white/10">
-              <div className="flex items-center space-x-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-black text-white dark:bg-white dark:text-black">
-                  {selectedBooking.user.profileImageUrl ? (
-                    <img
-                      src={selectedBooking.user.profileImageUrl}
-                      alt={selectedBooking.user.firstName || "User"}
-                      className="h-12 w-12 rounded-full"
-                    />
-                  ) : (
-                    <span className="text-lg font-semibold">
-                      {(selectedBooking.user.firstName || selectedBooking.user.email).charAt(0).toUpperCase()}
-                    </span>
-                  )}
-                </div>
-                <div>
-                  <p className="font-semibold">
-                    {selectedBooking.user.firstName && selectedBooking.user.lastName
-                      ? `${selectedBooking.user.firstName} ${selectedBooking.user.lastName}`
-                      : selectedBooking.user.email}
-                  </p>
-                  <p className="text-sm text-black/60 dark:text-white/60">
-                    {selectedBooking.user.email}
-                  </p>
+            <div className="flex items-center space-x-4 border-b border-white/10 pb-6">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary to-violet-600 text-white shadow-lg shadow-primary/20">
+                {selectedBooking.user.profileImageUrl ? (
+                  <img
+                    src={selectedBooking.user.profileImageUrl}
+                    alt={selectedBooking.user.firstName || "User"}
+                    className="h-16 w-16 rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="text-2xl font-bold">
+                    {(selectedBooking.user.firstName || selectedBooking.user.email).charAt(0).toUpperCase()}
+                  </span>
+                )}
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-foreground">
+                  {selectedBooking.user.firstName && selectedBooking.user.lastName
+                    ? `${selectedBooking.user.firstName} ${selectedBooking.user.lastName}`
+                    : selectedBooking.user.email}
+                </h3>
+                <p className="text-muted-foreground">
+                  {selectedBooking.user.email}
+                </p>
+                <div className="mt-2">
+                  {getStatusBadge(selectedBooking.status)}
                 </div>
               </div>
             </div>
 
-            {/* Status */}
-            <div>
-              <p className="mb-2 text-sm font-medium">Status</p>
-              {getStatusBadge(selectedBooking.status)}
-            </div>
-
             {/* Booking Details */}
-            <div className="space-y-3">
-              {selectedBooking.pickupLocation && (
-                <div>
-                  <p className="text-sm font-medium">Pickup Location</p>
-                  <p className="text-black/60 dark:text-white/60">
-                    {selectedBooking.pickupLocation}
-                  </p>
-                </div>
-              )}
-              {selectedBooking.dropLocation && (
-                <div>
-                  <p className="text-sm font-medium">Drop Location</p>
-                  <p className="text-black/60 dark:text-white/60">
-                    {selectedBooking.dropLocation}
-                  </p>
-                </div>
-              )}
-              {selectedBooking.scheduledDate && (
-                <div>
-                  <p className="text-sm font-medium">Scheduled Date</p>
-                  <p className="text-black/60 dark:text-white/60">
-                    {new Date(selectedBooking.scheduledDate).toLocaleString()}
-                  </p>
-                </div>
-              )}
+            <div className="space-y-4">
+              <h4 className="text-lg font-semibold text-foreground">Trip Details</h4>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {selectedBooking.pickupLocation && (
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                    <p className="text-sm text-muted-foreground">Pickup Location</p>
+                    <p className="font-medium text-foreground mt-1">
+                      {selectedBooking.pickupLocation}
+                    </p>
+                  </div>
+                )}
+                {selectedBooking.dropLocation && (
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                    <p className="text-sm text-muted-foreground">Drop Location</p>
+                    <p className="font-medium text-foreground mt-1">
+                      {selectedBooking.dropLocation}
+                    </p>
+                  </div>
+                )}
+                {selectedBooking.scheduledDate && (
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                    <p className="text-sm text-muted-foreground">Scheduled Date</p>
+                    <p className="font-medium text-foreground mt-1">
+                      {new Date(selectedBooking.scheduledDate).toLocaleString()}
+                    </p>
+                  </div>
+                )}
+              </div>
+
               {selectedBooking.notes && (
-                <div>
-                  <p className="text-sm font-medium">User's Notes</p>
-                  <p className="text-black/60 dark:text-white/60">
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-sm text-muted-foreground">User's Notes</p>
+                  <p className="font-medium text-foreground mt-1">
                     {selectedBooking.notes}
                   </p>
                 </div>
@@ -500,9 +508,9 @@ export default function DriverRequestsPage() {
             </div>
 
             {selectedBooking.driverResponse && (
-              <div className="rounded-lg border-2 border-black/10 p-3 dark:border-white/10">
-                <p className="text-sm font-medium">Your Response</p>
-                <p className="mt-1 text-black/60 dark:text-white/60">
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <p className="text-sm font-medium text-muted-foreground">Your Response</p>
+                <p className="mt-1 text-foreground">
                   {selectedBooking.driverResponse}
                 </p>
               </div>
@@ -522,10 +530,10 @@ export default function DriverRequestsPage() {
         title={`${respondAction === "ACCEPTED" ? "Accept" : "Reject"} Booking Request`}
       >
         {selectedBooking && (
-          <form onSubmit={handleSubmitResponse} className="space-y-4">
-            <div className="rounded-lg border-2 border-black/10 p-4 dark:border-white/10">
-              <p className="text-sm font-medium">User</p>
-              <p className="text-black/60 dark:text-white/60">
+          <form onSubmit={handleSubmitResponse} className="space-y-6">
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+              <p className="text-sm font-medium text-muted-foreground">User</p>
+              <p className="text-lg font-medium text-foreground">
                 {selectedBooking.user.firstName && selectedBooking.user.lastName
                   ? `${selectedBooking.user.firstName} ${selectedBooking.user.lastName}`
                   : selectedBooking.user.email}
@@ -533,11 +541,11 @@ export default function DriverRequestsPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium">
+              <label className="mb-2 block text-sm font-medium text-muted-foreground">
                 Message to User (Optional)
               </label>
               <textarea
-                className="w-full rounded-md border-2 border-black/10 p-2 dark:border-white/10 dark:bg-black"
+                className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50"
                 rows={3}
                 placeholder={
                   respondAction === "ACCEPTED"
@@ -549,10 +557,10 @@ export default function DriverRequestsPage() {
               />
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 pt-2">
               <Button
                 type="button"
-                variant="outline"
+                variant="glass"
                 className="flex-1"
                 onClick={() => {
                   setIsRespondModalOpen(false)
@@ -564,18 +572,17 @@ export default function DriverRequestsPage() {
               </Button>
               <Button
                 type="submit"
-                className={`flex-1 ${
-                  respondAction === "ACCEPTED"
-                    ? "bg-green-600 hover:bg-green-700"
-                    : "bg-red-600 hover:bg-red-700"
-                }`}
+                className={`flex-1 shadow-lg ${respondAction === "ACCEPTED"
+                    ? "bg-green-600 hover:bg-green-700 shadow-green-500/20"
+                    : "bg-red-600 hover:bg-red-700 shadow-red-500/20"
+                  }`}
                 disabled={responding}
               >
                 {responding
                   ? "Sending..."
                   : respondAction === "ACCEPTED"
-                  ? "Accept Request"
-                  : "Reject Request"}
+                    ? "Accept Request"
+                    : "Reject Request"}
               </Button>
             </div>
           </form>

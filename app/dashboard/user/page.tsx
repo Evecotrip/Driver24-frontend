@@ -11,6 +11,7 @@ import { Modal } from "@/components/ui/modal"
 import { getDriversByCity, createBooking, getUserBookings, getDriverFullInfo } from "@/lib/api"
 import { store } from "@/lib/store"
 import Link from "next/link"
+import { AnimatedBackground } from "@/components/ui/animated-background"
 
 interface Driver {
   id: string
@@ -62,13 +63,13 @@ export default function UserDashboard() {
   })
   const [bookingLoading, setBookingLoading] = useState(false)
   const [bookingSuccess, setBookingSuccess] = useState("")
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const itemsPerPage = 10
-  
+
   // Filter state
   const [showFilters, setShowFilters] = useState(false)
   const [minSalary, setMinSalary] = useState("")
@@ -135,16 +136,16 @@ export default function UserDashboard() {
       if (maxExperience) options.maxExperience = parseInt(maxExperience)
 
       const response = await getDriversByCity(token, cityToSearch, options)
-      
+
       if (response.success && response.data) {
         setDrivers(response.data)
         setCurrentPage(page)
-        
+
         if (response.pagination) {
           setTotalPages(response.pagination.totalPages)
           setTotalCount(response.pagination.totalCount)
         }
-        
+
         if (response.data.length === 0) {
           setError(`No drivers found matching your criteria`)
         }
@@ -227,31 +228,32 @@ export default function UserDashboard() {
 
   if (!isLoaded || !userData) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-lg">Loading...</div>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-50 to-zinc-100 dark:from-zinc-950 dark:to-black">
+    <div className="relative min-h-screen overflow-hidden">
+      <AnimatedBackground />
       <Navbar />
-      
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8 flex items-center justify-between">
+
+      <main className="container mx-auto px-4 py-24">
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div>
-            <h1 className="text-4xl font-bold">Find Drivers</h1>
-            <p className="mt-2 text-black/60 dark:text-white/60">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">Find Drivers</h1>
+            <p className="mt-2 text-muted-foreground">
               Search for verified drivers in your city
             </p>
           </div>
           <Link href="/dashboard/user/bookings">
-            <Button variant="outline">My Bookings</Button>
+            <Button variant="outline" className="w-full sm:w-auto">My Bookings</Button>
           </Link>
         </div>
 
         {/* Search Section */}
-        <Card className="mb-8">
+        <Card className="mb-8 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
           <CardHeader>
             <CardTitle>Search by City</CardTitle>
             <CardDescription>
@@ -259,32 +261,36 @@ export default function UserDashboard() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row">
               <Input
                 type="text"
                 placeholder="Search here"
                 value={searchCity}
                 onChange={(e) => setSearchCity(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                className="flex-1"
               />
-              <Button onClick={() => handleSearch()} disabled={loading}>
-                {loading ? "Searching..." : "Search"}
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                {showFilters ? "Hide Filters" : "Show Filters"}
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={() => handleSearch()} disabled={loading} className="flex-1 sm:flex-none">
+                  {loading ? "Searching..." : "Search"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="flex-1 sm:flex-none"
+                >
+                  {showFilters ? "Hide Filters" : "Show Filters"}
+                </Button>
+              </div>
             </div>
 
             {/* Filters Section */}
             {showFilters && (
-              <div className="mt-6 space-y-4 rounded-lg border-2 border-black/10 p-4 dark:border-white/10">
-                <h3 className="font-semibold">Filters</h3>
+              <div className="mt-6 space-y-4 rounded-xl border border-white/10 bg-white/5 p-4 animate-in fade-in slide-in-from-top-2">
+                <h3 className="font-semibold text-foreground">Filters</h3>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="mb-2 block text-sm font-medium">
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
                       Salary Range (₹/month)
                     </label>
                     <div className="flex gap-2">
@@ -303,7 +309,7 @@ export default function UserDashboard() {
                     </div>
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium">
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
                       Experience (years)
                     </label>
                     <div className="flex gap-2">
@@ -326,7 +332,7 @@ export default function UserDashboard() {
                   <Button onClick={handleApplyFilters} disabled={loading}>
                     Apply Filters
                   </Button>
-                  <Button variant="outline" onClick={handleClearFilters}>
+                  <Button variant="ghost" onClick={handleClearFilters}>
                     Clear Filters
                   </Button>
                 </div>
@@ -336,86 +342,84 @@ export default function UserDashboard() {
         </Card>
 
         {error && !drivers.length && (
-          <div className="mb-8 rounded-lg border-2 border-yellow-500 bg-yellow-50 p-4 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300">
+          <div className="mb-8 rounded-xl border border-yellow-500/20 bg-yellow-500/10 p-4 text-yellow-500 text-center animate-in fade-in">
             {error}
           </div>
         )}
 
         {/* Results Summary */}
         {drivers.length > 0 && (
-          <div className="mb-4 text-sm text-black/60 dark:text-white/60">
+          <div className="mb-4 text-sm text-muted-foreground">
             Showing {drivers.length} of {totalCount} drivers (Page {currentPage} of {totalPages})
           </div>
         )}
 
         {/* Drivers Grid */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {drivers.map((driver) => (
-            <Card key={driver.id} className="overflow-hidden">
+          {drivers.map((driver, index) => (
+            <Card key={driver.id} className="group overflow-hidden hover:-translate-y-1 transition-transform duration-300" style={{ animationDelay: `${index * 100}ms` }}>
               <CardHeader className="pb-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-black text-white dark:bg-white dark:text-black">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-violet-600 text-white shadow-lg shadow-primary/20">
                       {driver.user.profileImageUrl ? (
                         <img
                           src={driver.user.profileImageUrl}
                           alt={driver.name}
-                          className="h-12 w-12 rounded-full"
+                          className="h-12 w-12 rounded-full object-cover"
                         />
                       ) : (
-                        <span className="text-lg font-semibold">
+                        <span className="text-lg font-bold">
                           {driver.name.charAt(0)}
                         </span>
                       )}
                     </div>
                     <div>
-                      <CardTitle className="text-lg">{driver.name}</CardTitle>
+                      <CardTitle className="text-lg bg-none text-foreground">{driver.name}</CardTitle>
                       <CardDescription>{driver.city}</CardDescription>
                     </div>
                   </div>
                   {driver.isVerified && (
-                    <div className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700 dark:bg-green-900 dark:text-green-300">
+                    <div className="rounded-full bg-green-500/10 px-2 py-1 text-xs font-medium text-green-500 border border-green-500/20">
                       Verified
                     </div>
                   )}
                 </div>
               </CardHeader>
-              <CardContent className="space-y-2">
-                {driver.salaryExpectation && (
-                  <div className="flex items-center text-sm">
-                    <span className="font-medium">Salary:</span>
-                    <span className="ml-2 text-black/60 dark:text-white/60">
-                      {'₹' + driver?.salaryExpectation + '/month' || 'NA'}
-                    </span>
-                  </div>
-                )}
-                {driver.experience && (
-                  <div className="flex items-center text-sm">
-                    <span className="font-medium">Experience:</span>
-                    <span className="ml-2 text-black/60 dark:text-white/60">
-                      {driver.experience} years
-                    </span>
-                  </div>
-                )}
-                
-                <div className="mt-4 flex gap-2">
-                  <Button 
-                    className="flex-1" 
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  {driver.salaryExpectation && (
+                    <div className="rounded-lg bg-white/5 p-2 border border-white/5">
+                      <span className="block text-xs text-muted-foreground">Salary</span>
+                      <span className="font-medium text-foreground">₹{driver.salaryExpectation}/mo</span>
+                    </div>
+                  )}
+                  {driver.experience && (
+                    <div className="rounded-lg bg-white/5 p-2 border border-white/5">
+                      <span className="block text-xs text-muted-foreground">Experience</span>
+                      <span className="font-medium text-foreground">{driver.experience} years</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    className="flex-1"
                     size="sm"
-                    variant="outline"
+                    variant="glass"
                     onClick={() => {
                       setSelectedDriver(driver)
                       setIsModalOpen(true)
                     }}
                   >
-                    View Details
+                    Details
                   </Button>
-                  <Button 
-                    className="flex-1" 
+                  <Button
+                    className="flex-1 shadow-lg shadow-primary/20"
                     size="sm"
                     onClick={() => handleRequestDriver(driver)}
                   >
-                    Request Driver
+                    Request
                   </Button>
                 </div>
               </CardContent>
@@ -424,14 +428,27 @@ export default function UserDashboard() {
         </div>
 
         {drivers.length === 0 && !loading && !error && (
-          <div className="text-center text-black/60 dark:text-white/60">
-            Search for drivers in your city to get started
+          <div className="text-center py-12">
+            <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-white/5 mb-4">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="1.5"
+                stroke="currentColor"
+                className="h-8 w-8 text-muted-foreground"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-foreground">No drivers found</h3>
+            <p className="text-muted-foreground mt-2">Try searching for a different city or adjusting filters</p>
           </div>
         )}
 
         {/* Pagination Controls */}
         {drivers.length > 0 && totalPages > 1 && (
-          <div className="mt-8 flex items-center justify-center gap-2">
+          <div className="mt-12 flex items-center justify-center gap-2">
             <Button
               variant="outline"
               onClick={() => handlePageChange(currentPage - 1)}
@@ -439,10 +456,9 @@ export default function UserDashboard() {
             >
               Previous
             </Button>
-            
+
             <div className="flex gap-1">
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                // Show first page, last page, current page, and pages around current
                 if (
                   page === 1 ||
                   page === totalPages ||
@@ -463,7 +479,7 @@ export default function UserDashboard() {
                   page === currentPage - 2 ||
                   page === currentPage + 2
                 ) {
-                  return <span key={page} className="px-2">...</span>
+                  return <span key={page} className="px-2 text-muted-foreground self-end pb-2">...</span>
                 }
                 return null
               })}
@@ -492,38 +508,37 @@ export default function UserDashboard() {
         {selectedDriver && (
           <div className="space-y-6">
             {/* Driver Header */}
-            <div className="flex items-center space-x-4 border-b-2 border-black/10 pb-6 dark:border-white/10">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-black text-white dark:bg-white dark:text-black">
+            <div className="flex items-center space-x-4 border-b border-white/10 pb-6">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary to-violet-600 text-white shadow-lg shadow-primary/20">
                 {selectedDriver.user.profileImageUrl ? (
                   <img
                     src={selectedDriver.user.profileImageUrl}
                     alt={selectedDriver.name}
-                    className="h-16 w-16 rounded-full"
+                    className="h-16 w-16 rounded-full object-cover"
                   />
                 ) : (
-                  <span className="text-2xl font-semibold">
+                  <span className="text-2xl font-bold">
                     {selectedDriver.name.charAt(0)}
                   </span>
                 )}
               </div>
               <div className="flex-1">
-                <h3 className="text-2xl font-bold">{selectedDriver.name}</h3>
-                <p className="text-black/60 dark:text-white/60">
+                <h3 className="text-2xl font-bold text-foreground">{selectedDriver.name}</h3>
+                <p className="text-muted-foreground">
                   {selectedDriver.city}
                   {selectedDriver.state && `, ${selectedDriver.state}`}
                 </p>
                 <div className="mt-2 flex items-center gap-2">
                   {selectedDriver.isVerified && (
-                    <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-900 dark:text-green-300">
+                    <span className="rounded-full bg-green-500/10 px-3 py-1 text-xs font-medium text-green-500 border border-green-500/20">
                       ✓ Verified Driver
                     </span>
                   )}
                   <span
-                    className={`rounded-full px-3 py-1 text-xs font-medium ${
-                      selectedDriver.availability
-                        ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
-                        : "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
-                    }`}
+                    className={`rounded-full px-3 py-1 text-xs font-medium border ${selectedDriver.availability
+                        ? "bg-green-500/10 text-green-500 border-green-500/20"
+                        : "bg-red-500/10 text-red-500 border-red-500/20"
+                      }`}
                   >
                     {selectedDriver.availability ? "Available" : "Unavailable"}
                   </span>
@@ -534,18 +549,18 @@ export default function UserDashboard() {
             {/* Vehicle Information */}
             {(selectedDriver.vehicleType || selectedDriver.vehicleModel || selectedDriver.vehicleNumber) && (
               <div>
-                <h4 className="mb-3 text-lg font-semibold">Basic Information</h4>
+                <h4 className="mb-3 text-lg font-semibold text-foreground">Basic Information</h4>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {selectedDriver.experience && (
-                    <div className="rounded-lg border-2 border-black/10 p-3 dark:border-white/10">
-                      <p className="text-sm text-black/60 dark:text-white/60">Experience</p>
-                      <p className="font-medium">{selectedDriver.experience} years</p>
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                      <p className="text-sm text-muted-foreground">Experience</p>
+                      <p className="font-medium text-foreground">{selectedDriver.experience} years</p>
                     </div>
                   )}
                   {selectedDriver.salaryExpectation && (
-                    <div className="rounded-lg border-2 border-black/10 p-3 dark:border-white/10">
-                      <p className="text-sm text-black/60 dark:text-white/60">Salary Expectation</p>
-                      <p className="font-medium">₹{selectedDriver.salaryExpectation.toLocaleString('en-IN')}/month</p>
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                      <p className="text-sm text-muted-foreground">Salary Expectation</p>
+                      <p className="font-medium text-foreground">₹{selectedDriver.salaryExpectation.toLocaleString('en-IN')}/month</p>
                     </div>
                   )}
                 </div>
@@ -554,28 +569,28 @@ export default function UserDashboard() {
 
             {/* License Information */}
             <div>
-              <h4 className="mb-3 text-lg font-semibold">License & Registration</h4>
+              <h4 className="mb-3 text-lg font-semibold text-foreground">License & Registration</h4>
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-lg border-2 border-black/10 p-3 dark:border-white/10">
-                  <p className="text-sm text-black/60 dark:text-white/60">RC Number</p>
-                  <p className="font-medium">{selectedDriver.rcNumber.slice(0, 5) + "..."}</p>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-sm text-muted-foreground">RC Number</p>
+                  <p className="font-medium text-foreground">{selectedDriver.rcNumber.slice(0, 5) + "..."}</p>
                 </div>
-                <div className="rounded-lg border-2 border-black/10 p-3 dark:border-white/10">
-                  <p className="text-sm text-black/60 dark:text-white/60">DL Number</p>
-                  <p className="font-medium">{selectedDriver.dlNumber.slice(0, 5) + "..."}</p>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-sm text-muted-foreground">DL Number</p>
+                  <p className="font-medium text-foreground">{selectedDriver.dlNumber.slice(0, 5) + "..."}</p>
                 </div>
               </div>
             </div>
 
             {/* Address Information */}
             <div>
-              <h4 className="mb-3 text-lg font-semibold">Address</h4>
+              <h4 className="mb-3 text-lg font-semibold text-foreground">Address</h4>
               <div className="space-y-3">
-                <div className="rounded-lg border-2 border-black/10 p-3 dark:border-white/10">
-                  <p className="text-sm text-black/60 dark:text-white/60">Operating Address</p>
-                  <p className="font-medium">{selectedDriver.operatingAddress}</p>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-sm text-muted-foreground">Operating Address</p>
+                  <p className="font-medium text-foreground">{selectedDriver.operatingAddress}</p>
                   {selectedDriver.pincode && (
-                    <p className="mt-1 text-sm text-black/60 dark:text-white/60">
+                    <p className="mt-1 text-sm text-muted-foreground">
                       Pincode: {selectedDriver.pincode}
                     </p>
                   )}
@@ -584,9 +599,9 @@ export default function UserDashboard() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-3 border-t-2 border-black/10 pt-6 dark:border-white/10">
+            <div className="flex gap-3 border-t border-white/10 pt-6">
               <Button
-                className="flex-1"
+                className="flex-1 shadow-lg shadow-primary/20"
                 onClick={() => window.open(`tel:${selectedDriver.phoneNumber}`)}
               >
                 <svg
@@ -604,7 +619,7 @@ export default function UserDashboard() {
                 Call Driver
               </Button>
               <Button
-                variant="outline"
+                variant="glass"
                 className="flex-1"
                 onClick={() => window.open(`mailto:${selectedDriver.user.email}`)}
               >
@@ -640,24 +655,24 @@ export default function UserDashboard() {
       >
         {bookingDriver && (
           <form onSubmit={handleSubmitBooking} className="space-y-4">
-            <div className="rounded-lg border-2 border-black/10 p-4 dark:border-white/10">
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
               <div className="flex items-center space-x-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-black text-white dark:bg-white dark:text-black">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-violet-600 text-white shadow-lg shadow-primary/20">
                   {bookingDriver.user.profileImageUrl ? (
                     <img
                       src={bookingDriver.user.profileImageUrl}
                       alt={bookingDriver.name}
-                      className="h-12 w-12 rounded-full"
+                      className="h-12 w-12 rounded-full object-cover"
                     />
                   ) : (
-                    <span className="text-lg font-semibold">
+                    <span className="text-lg font-bold">
                       {bookingDriver.name.charAt(0)}
                     </span>
                   )}
                 </div>
                 <div>
-                  <p className="font-semibold">{bookingDriver.name}</p>
-                  <p className="text-sm text-black/60 dark:text-white/60">
+                  <p className="font-semibold text-foreground">{bookingDriver.name}</p>
+                  <p className="text-sm text-muted-foreground">
                     {bookingDriver.city}
                   </p>
                 </div>
@@ -665,19 +680,19 @@ export default function UserDashboard() {
             </div>
 
             {bookingSuccess && (
-              <div className="rounded-lg border-2 border-green-500 bg-green-50 p-3 text-green-700 dark:bg-green-950 dark:text-green-300">
+              <div className="rounded-xl border border-green-500/20 bg-green-500/10 p-3 text-green-500">
                 {bookingSuccess}
               </div>
             )}
 
             {error && (
-              <div className="rounded-lg border-2 border-red-500 bg-red-50 p-3 text-red-700 dark:bg-red-950 dark:text-red-300">
+              <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-red-500">
                 {error}
               </div>
             )}
 
             <div>
-              <label className="mb-2 block text-sm font-medium">
+              <label className="mb-2 block text-sm font-medium text-muted-foreground">
                 Pickup Location (Optional)
               </label>
               <Input
@@ -691,7 +706,7 @@ export default function UserDashboard() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium">
+              <label className="mb-2 block text-sm font-medium text-muted-foreground">
                 Drop Location (Optional)
               </label>
               <Input
@@ -705,7 +720,7 @@ export default function UserDashboard() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium">
+              <label className="mb-2 block text-sm font-medium text-muted-foreground">
                 Scheduled Date (Optional)
               </label>
               <Input
@@ -718,11 +733,11 @@ export default function UserDashboard() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium">
+              <label className="mb-2 block text-sm font-medium text-muted-foreground">
                 Additional Notes (Optional)
               </label>
               <textarea
-                className="w-full rounded-md border-2 border-black/10 p-2 dark:border-white/10 dark:bg-black"
+                className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50"
                 rows={3}
                 placeholder="Any special requirements or notes..."
                 value={bookingForm.notes}
@@ -732,10 +747,10 @@ export default function UserDashboard() {
               />
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 pt-4">
               <Button
                 type="button"
-                variant="outline"
+                variant="glass"
                 className="flex-1"
                 onClick={() => {
                   setIsBookingModalOpen(false)
@@ -747,7 +762,7 @@ export default function UserDashboard() {
               </Button>
               <Button
                 type="submit"
-                className="flex-1"
+                className="flex-1 shadow-lg shadow-primary/20"
                 disabled={bookingLoading}
               >
                 {bookingLoading ? "Sending..." : "Send Request"}
