@@ -375,7 +375,7 @@ export default function UserDashboard() {
                       )}
                     </div>
                     <div>
-                      <CardTitle className="text-lg bg-none text-foreground">{driver.name}</CardTitle>
+                      <CardTitle className="text-lg bg-none text-white">{driver.name}</CardTitle>
                       <CardDescription>{driver.city}</CardDescription>
                     </div>
                   </div>
@@ -573,11 +573,11 @@ export default function UserDashboard() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-xl border border-white/10 bg-white/5 p-4">
                   <p className="text-sm text-muted-foreground">RC Number</p>
-                  <p className="font-medium text-foreground">{selectedDriver.rcNumber.slice(0, 5) + "..."}</p>
+                  <p className="font-medium text-foreground">{selectedDriver.rcNumber ? selectedDriver.rcNumber.slice(0, 5) + "..." : "Not provided"}</p>
                 </div>
                 <div className="rounded-xl border border-white/10 bg-white/5 p-4">
                   <p className="text-sm text-muted-foreground">DL Number</p>
-                  <p className="font-medium text-foreground">{selectedDriver.dlNumber.slice(0, 5) + "..."}</p>
+                  <p className="font-medium text-foreground">{selectedDriver.dlNumber ? selectedDriver.dlNumber.slice(0, 5) + "..." : "Not provided"}</p>
                 </div>
               </div>
             </div>

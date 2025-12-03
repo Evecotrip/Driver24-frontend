@@ -16,6 +16,7 @@ export default function GuestDriverRegistration() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [currentStep, setCurrentStep] = useState(1)
+  const totalSteps = 6 // Personal Info, DL, PAN, Aadhar, Address, Experience
   
   // File state
   const [files, setFiles] = useState<{
@@ -31,7 +32,8 @@ export default function GuestDriverRegistration() {
   const [formData, setFormData] = useState({
     email: "",
     phoneNumber: "",
-    name: "",
+    firstName: "",
+    lastName: "",
     dlNumber: "",
     panNumber: "",
     aadharNumber: "",
@@ -53,7 +55,7 @@ export default function GuestDriverRegistration() {
   }
 
   const validateStep1 = () => {
-    if (!formData.email || !formData.phoneNumber || !formData.name) {
+    if (!formData.email || !formData.phoneNumber || !formData.firstName || !formData.lastName) {
       setError("Please fill in all required fields")
       return false
     }
@@ -73,50 +75,30 @@ export default function GuestDriverRegistration() {
       return false
     }
     
-    // Name validation (at least 2 characters, only letters and spaces)
-    if (formData.name.trim().length < 2) {
-      setError("Name must be at least 2 characters long")
+    // First name validation (at least 2 characters, only letters)
+    if (formData.firstName.trim().length < 2) {
+      setError("First name must be at least 2 characters long")
       return false
     }
-    if (!/^[a-zA-Z\s]+$/.test(formData.name)) {
-      setError("Name should only contain letters and spaces")
+    if (!/^[a-zA-Z]+$/.test(formData.firstName.trim())) {
+      setError("First name should only contain letters")
+      return false
+    }
+    
+    // Last name validation (at least 2 characters, only letters)
+    if (formData.lastName.trim().length < 2) {
+      setError("Last name must be at least 2 characters long")
+      return false
+    }
+    if (!/^[a-zA-Z]+$/.test(formData.lastName.trim())) {
+      setError("Last name should only contain letters")
       return false
     }
     
     return true
   }
 
-  const validateStep2 = () => {
-    if (!formData.dlNumber || !formData.panNumber || !formData.aadharNumber) {
-      setError("Please fill in all required document details")
-      return false
-    }
-    
-    // DL Number validation (Indian format: XX##-YYYYYYYYYYY or XX##YYYYYYYYYYY)
-    // Format: State Code (2 letters) + RTO Code (2 digits) + Year (4 digits) + Serial (7 digits)
-    const dlRegex = /^[A-Z]{2}[-\s]?\d{2}[-\s]?\d{4}[-\s]?\d{7}$/
-    if (!dlRegex.test(formData.dlNumber.toUpperCase())) {
-      setError("Please enter a valid DL number (e.g., MH01-20230001234 or MH0120230001234)")
-      return false
-    }
-    
-    // PAN validation (Indian format: ABCDE1234F)
-    const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/
-    if (!panRegex.test(formData.panNumber.toUpperCase())) {
-      setError("Please enter a valid PAN number (e.g., ABCDE1234F)")
-      return false
-    }
-    
-    // Aadhar validation (12 digits, can have spaces or dashes)
-    const cleanAadhar = formData.aadharNumber.replace(/[\s\-]/g, '')
-    const aadharRegex = /^\d{12}$/
-    if (!aadharRegex.test(cleanAadhar)) {
-      setError("Please enter a valid 12-digit Aadhar number")
-      return false
-    }
-    
-    return true
-  }
+  // Removed validateStep2 - now handled in handleNext for each document step
 
   const validateStep3 = () => {
     if (!formData.permanentAddress || !formData.operatingAddress || !formData.city) {
@@ -162,9 +144,55 @@ export default function GuestDriverRegistration() {
   const handleNext = () => {
     setError("")
     
+    // Step 1: Personal Info
     if (currentStep === 1 && !validateStep1()) return
-    if (currentStep === 2 && !validateStep2()) return
-    if (currentStep === 3 && !validateStep3()) return
+    
+    // Step 2: DL Document
+    if (currentStep === 2) {
+      if (!formData.dlNumber) {
+        setError("Please enter your DL number")
+        return
+      }
+      const dlRegex = /^[A-Z]{2}[-\s]?\d{2}[-\s]?\d{4}[-\s]?\d{7}$/
+      if (!dlRegex.test(formData.dlNumber.toUpperCase())) {
+        setError("Please enter a valid DL number (e.g., MH01-20230001234)")
+        return
+      }
+      if (!files.dlImage) {
+        setError("Please upload your DL image")
+        return
+      }
+    }
+    
+    // Step 3: PAN Document
+    if (currentStep === 3) {
+      if (!formData.panNumber) {
+        setError("Please enter your PAN number")
+        return
+      }
+      const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/
+      if (!panRegex.test(formData.panNumber.toUpperCase())) {
+        setError("Please enter a valid PAN number (e.g., ABCDE1234F)")
+        return
+      }
+    }
+    
+    // Step 4: Aadhar Document
+    if (currentStep === 4) {
+      if (!formData.aadharNumber) {
+        setError("Please enter your Aadhar number")
+        return
+      }
+      const cleanAadhar = formData.aadharNumber.replace(/[\s\-]/g, '')
+      const aadharRegex = /^\d{12}$/
+      if (!aadharRegex.test(cleanAadhar)) {
+        setError("Please enter a valid 12-digit Aadhar number")
+        return
+      }
+    }
+    
+    // Step 5: Address
+    if (currentStep === 5 && !validateStep3()) return
     
     setCurrentStep((prev) => prev + 1)
   }
@@ -177,13 +205,32 @@ export default function GuestDriverRegistration() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!validateStep1() || !validateStep2() || !validateStep3()) {
+    // Only submit if on final step
+    if (currentStep !== totalSteps) {
+      handleNext()
+      return
+    }
+    
+    // Final validation before submit
+    if (!validateStep1() || !validateStep3()) {
       return
     }
 
-    // Validate at least DL image is provided
-    if (!files.dlImage) {
-      setError("DL image is required")
+    // Validate DL
+    if (!formData.dlNumber || !files.dlImage) {
+      setError("DL number and image are required")
+      return
+    }
+    
+    // Validate PAN
+    if (!formData.panNumber) {
+      setError("PAN number is required")
+      return
+    }
+    
+    // Validate Aadhar
+    if (!formData.aadharNumber) {
+      setError("Aadhar number is required")
       return
     }
 
@@ -192,7 +239,27 @@ export default function GuestDriverRegistration() {
     setSuccess("")
 
     try {
-      const response = await registerGuestDriverWithFiles(formData, files)
+      // Combine first name and last name
+      const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`
+      
+      // Create API payload with combined name
+      const apiData = {
+        email: formData.email,
+        phoneNumber: formData.phoneNumber,
+        name: fullName,
+        dlNumber: formData.dlNumber,
+        panNumber: formData.panNumber,
+        aadharNumber: formData.aadharNumber,
+        permanentAddress: formData.permanentAddress,
+        operatingAddress: formData.operatingAddress,
+        city: formData.city,
+        state: formData.state,
+        pincode: formData.pincode,
+        experience: formData.experience,
+        salaryExpectation: formData.salaryExpectation,
+      }
+      
+      const response = await registerGuestDriverWithFiles(apiData, files)
 
       if (response.success && response.data) {
         setSuccess(response.message || "Registration details saved successfully!")
@@ -234,7 +301,7 @@ export default function GuestDriverRegistration() {
 
           {/* Progress Indicator */}
           <div className="mb-8 flex items-center justify-center gap-2">
-            {[1, 2, 3, 4].map((step) => (
+            {[1, 2, 3, 4, 5, 6].map((step) => (
               <div key={step} className="flex items-center">
                 <div
                   className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all ${
@@ -257,11 +324,13 @@ export default function GuestDriverRegistration() {
           </div>
 
           {/* Step Labels */}
-          <div className="mb-8 grid grid-cols-4 gap-2 text-center text-xs text-muted-foreground">
-            <div className={currentStep === 1 ? "text-primary font-medium" : ""}>Personal Info</div>
-            <div className={currentStep === 2 ? "text-primary font-medium" : ""}>Documents</div>
-            <div className={currentStep === 3 ? "text-primary font-medium" : ""}>Address</div>
-            <div className={currentStep === 4 ? "text-primary font-medium" : ""}>Experience</div>
+          <div className="mb-8 grid grid-cols-6 gap-1 text-center text-xs text-muted-foreground">
+            <div className={currentStep === 1 ? "text-primary font-medium" : ""}>Personal</div>
+            <div className={currentStep === 2 ? "text-primary font-medium" : ""}>DL</div>
+            <div className={currentStep === 3 ? "text-primary font-medium" : ""}>PAN</div>
+            <div className={currentStep === 4 ? "text-primary font-medium" : ""}>Aadhar</div>
+            <div className={currentStep === 5 ? "text-primary font-medium" : ""}>Address</div>
+            <div className={currentStep === 6 ? "text-primary font-medium" : ""}>Experience</div>
           </div>
 
           {error && (
@@ -276,7 +345,13 @@ export default function GuestDriverRegistration() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} onKeyDown={(e) => {
+            // Prevent Enter key from submitting form except on final step
+            if (e.key === 'Enter' && currentStep !== totalSteps) {
+              e.preventDefault()
+              handleNext()
+            }
+          }}>
             {/* Step 1: Personal Information */}
             {currentStep === 1 && (
               <Card className="animate-in fade-in slide-in-from-right-4 duration-500">
@@ -287,16 +362,29 @@ export default function GuestDriverRegistration() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
-                      Full Name *
-                    </label>
-                    <Input
-                      required
-                      placeholder="John Doe"
-                      value={formData.name}
-                      onChange={(e) => handleInputChange("name", e.target.value)}
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                        First Name *
+                      </label>
+                      <Input
+                        required
+                        placeholder="Aryan"
+                        value={formData.firstName}
+                        onChange={(e) => handleInputChange("firstName", e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                        Last Name *
+                      </label>
+                      <Input
+                        required
+                        placeholder="Agarwal"
+                        value={formData.lastName}
+                        onChange={(e) => handleInputChange("lastName", e.target.value)}
+                      />
+                    </div>
                   </div>
                   <div>
                     <label className="mb-2 block text-sm font-medium text-muted-foreground">
@@ -329,82 +417,111 @@ export default function GuestDriverRegistration() {
               </Card>
             )}
 
-            {/* Step 2: Document Information */}
+            {/* Step 2: Driving License */}
             {currentStep === 2 && (
               <Card className="animate-in fade-in slide-in-from-right-4 duration-500">
                 <CardHeader>
-                  <CardTitle>Identity Documents</CardTitle>
+                  <CardTitle>Driving License</CardTitle>
                   <CardDescription>
-                    Provide your DL, PAN, and Aadhar details for verification
+                    Enter your DL number and upload a clear photo
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-muted-foreground">
-                        Driving License Number *
-                      </label>
-                      <Input
-                        required
-                        placeholder="MH0120230001234"
-                        value={formData.dlNumber}
-                        onChange={(e) => handleInputChange("dlNumber", e.target.value)}
-                      />
-                    </div>
-                    <FileUpload
-                      label="DL Image"
-                      name="dlImage"
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                      Driving License Number *
+                    </label>
+                    <Input
                       required
-                      onChange={(file) => handleFileChange("dlImage", file)}
-                      description="Upload your Driving License (JPEG, PNG, or PDF, max 5MB)"
+                      placeholder="MH0120230001234"
+                      value={formData.dlNumber}
+                      onChange={(e) => handleInputChange("dlNumber", e.target.value)}
                     />
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Format: XX##YYYYYYYYYYY (e.g., MH01-2023-0001234)
+                    </p>
                   </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-muted-foreground">
-                        PAN Card Number *
-                      </label>
-                      <Input
-                        required
-                        placeholder="ABCDE1234F"
-                        value={formData.panNumber}
-                        onChange={(e) => handleInputChange("panNumber", e.target.value.toUpperCase())}
-                      />
-                    </div>
-                    <FileUpload
-                      label="PAN Image"
-                      name="panImage"
-                      onChange={(file) => handleFileChange("panImage", file)}
-                      description="Upload your PAN Card (JPEG, PNG, or PDF, max 5MB)"
-                    />
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-muted-foreground">
-                        Aadhar Card Number *
-                      </label>
-                      <Input
-                        required
-                        placeholder="1234-5678-9012"
-                        value={formData.aadharNumber}
-                        onChange={(e) => handleInputChange("aadharNumber", e.target.value)}
-                      />
-                    </div>
-                    <FileUpload
-                      label="Aadhar Image"
-                      name="aadharImage"
-                      onChange={(file) => handleFileChange("aadharImage", file)}
-                      description="Upload your Aadhar Card (JPEG, PNG, or PDF, max 5MB)"
-                    />
-                  </div>
+                  <FileUpload
+                    label="DL Image *"
+                    name="dlImage"
+                    required
+                    onChange={(file) => handleFileChange("dlImage", file)}
+                    description="Upload a clear photo of your Driving License (JPEG, PNG, or PDF, max 5MB)"
+                  />
                 </CardContent>
               </Card>
             )}
 
-            {/* Step 3: Address Information */}
+            {/* Step 3: PAN Card */}
             {currentStep === 3 && (
+              <Card className="animate-in fade-in slide-in-from-right-4 duration-500">
+                <CardHeader>
+                  <CardTitle>PAN Card</CardTitle>
+                  <CardDescription>
+                    Enter your PAN number and optionally upload a photo
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                      PAN Number *
+                    </label>
+                    <Input
+                      required
+                      placeholder="ABCDE1234F"
+                      value={formData.panNumber}
+                      onChange={(e) => handleInputChange("panNumber", e.target.value.toUpperCase())}
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Format: ABCDE1234F (5 letters + 4 digits + 1 letter)
+                    </p>
+                  </div>
+                  <FileUpload
+                    label="PAN Image (Optional)"
+                    name="panImage"
+                    onChange={(file) => handleFileChange("panImage", file)}
+                    description="Upload a clear photo of your PAN card (JPEG, PNG, or PDF, max 5MB)"
+                  />
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Step 4: Aadhar Card */}
+            {currentStep === 4 && (
+              <Card className="animate-in fade-in slide-in-from-right-4 duration-500">
+                <CardHeader>
+                  <CardTitle>Aadhar Card</CardTitle>
+                  <CardDescription>
+                    Enter your Aadhar number and optionally upload a photo
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                      Aadhar Number *
+                    </label>
+                    <Input
+                      required
+                      placeholder="1234-5678-9012"
+                      value={formData.aadharNumber}
+                      onChange={(e) => handleInputChange("aadharNumber", e.target.value)}
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      12 digits (can include spaces or dashes)
+                    </p>
+                  </div>
+                  <FileUpload
+                    label="Aadhar Image (Optional)"
+                    name="aadharImage"
+                    onChange={(file) => handleFileChange("aadharImage", file)}
+                    description="Upload a clear photo of your Aadhar card (JPEG, PNG, or PDF, max 5MB)"
+                  />
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Step 5: Address Details */}
+            {currentStep === 5 && (
               <Card className="animate-in fade-in slide-in-from-right-4 duration-500">
                 <CardHeader>
                   <CardTitle>Address Details</CardTitle>
@@ -472,8 +589,8 @@ export default function GuestDriverRegistration() {
               </Card>
             )}
 
-            {/* Step 4: Experience & Salary */}
-            {currentStep === 4 && (
+            {/* Step 6: Experience & Salary */}
+            {currentStep === 6 && (
               <Card className="animate-in fade-in slide-in-from-right-4 duration-500">
                 <CardHeader>
                   <CardTitle>Experience & Salary Expectation</CardTitle>
@@ -525,7 +642,7 @@ export default function GuestDriverRegistration() {
                   Back
                 </Button>
               )}
-              {currentStep < 4 ? (
+              {currentStep < totalSteps ? (
                 <Button
                   type="button"
                   onClick={handleNext}
