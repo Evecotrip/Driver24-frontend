@@ -557,7 +557,7 @@ export default function GuestDriverRegistration() {
             <p className="font-medium mb-2">📋 What happens next?</p>
             <ol className="list-decimal list-inside space-y-1 text-blue-300">
               <li>Your registration details will be saved securely</li>
-              <li>You'll be redirected to complete authentication with Clerk</li>
+              <li>You'll be redirected to complete authentication</li>
               <li>After authentication, your driver profile will be automatically created</li>
               <li>You can then access your driver dashboard immediately</li>
             </ol>
