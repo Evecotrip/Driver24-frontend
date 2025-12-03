@@ -437,7 +437,7 @@ export default function GuestDriverRegistration() {
           </div>
 
           {/* Progress Indicator */}
-          <div className="mb-8 flex items-center justify-center gap-2">
+          <div className="mb-8 hidden md:flex items-center justify-center gap-2">
             {[1, 2, 3, 4, 5, 6].map((step) => (
               <div key={step} className="flex items-center">
                 <div
