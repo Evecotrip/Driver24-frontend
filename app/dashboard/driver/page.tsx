@@ -7,19 +7,22 @@ import { Navbar } from "@/components/navbar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { createDriverProfile, getMyDriverProfile, updateAvailability } from "@/lib/api"
+import { createDriverProfile, getMyDriverProfile, updateAvailability, checkPendingRegistration, completeDriverRegistration } from "@/lib/api"
 import { store } from "@/lib/store"
 import Link from "next/link"
 import { AnimatedBackground } from "@/components/ui/animated-background"
+import { useAuth } from "@clerk/nextjs"
 
 interface DriverProfile {
   id: string
   name: string
   phoneNumber: string
-  rcNumber: string
-  rcImage?: string
   dlNumber: string
   dlImage?: string
+  panNumber?: string
+  panImage?: string
+  aadharNumber?: string
+  aadharImage?: string
   permanentAddress: string
   operatingAddress: string
   city: string
@@ -37,6 +40,7 @@ interface DriverProfile {
 
 export default function DriverDashboard() {
   const { user, isLoaded } = useUser()
+  const { getToken } = useAuth()
   const router = useRouter()
   const [userData, setUserData] = useState(store.getUserData())
   const [driverProfile, setDriverProfile] = useState<DriverProfile | null>(null)
@@ -49,10 +53,12 @@ export default function DriverDashboard() {
   const [formData, setFormData] = useState({
     name: "",
     phoneNumber: "",
-    rcNumber: "",
-    rcImage: "",
     dlNumber: "",
     dlImage: "",
+    panNumber: "",
+    panImage: "",
+    aadharNumber: "",
+    aadharImage: "",
     permanentAddress: "",
     operatingAddress: "",
     city: "",
@@ -87,8 +93,72 @@ export default function DriverDashboard() {
       return
     }
 
-    loadDriverProfile()
-  }, [isLoaded, user, router])
+    // Check for pending registration and complete it automatically
+    const completePendingRegistration = async () => {
+      if (!user?.primaryEmailAddress?.emailAddress) {
+        loadDriverProfile()
+        return
+      }
+      
+      try {
+        // Check if there's a pending registration for this email
+        const pendingCheck = await checkPendingRegistration(
+          user.primaryEmailAddress.emailAddress
+        )
+        
+        if (pendingCheck.success && pendingCheck.data) {
+          console.log('✅ Found pending registration, completing...', pendingCheck.data)
+          
+          // Get Clerk session token
+          const clerkToken = await getToken()
+          console.log('🔑 Got Clerk token:', clerkToken ? 'Yes' : 'No')
+          
+          if (clerkToken) {
+            // Complete the registration
+            const completeResponse = await completeDriverRegistration(
+              clerkToken,
+              user.primaryEmailAddress.emailAddress
+            )
+            
+            if (completeResponse.success && completeResponse.data) {
+              console.log('✅ Registration completed successfully!', completeResponse.data)
+              
+              // Store the custom JWT token and user data
+              store.setToken(completeResponse.data.token)
+              store.setUserData(completeResponse.data.user)
+              setUserData(completeResponse.data.user)
+              
+              setSuccess('Profile activated successfully! Welcome to Driver24.')
+              setTimeout(() => setSuccess(''), 5000)
+            } else {
+              console.error('❌ Registration completion failed:', completeResponse.error)
+              
+              // If user already has role, just clear pending email and continue
+              if (completeResponse.error?.includes('already has a role')) {
+                console.log('ℹ️ User already has DRIVER role, clearing pending registration')
+                localStorage.removeItem('pendingDriverEmail')
+                // Profile will be loaded in finally block
+              } else {
+                setError(completeResponse.error || 'Failed to complete registration')
+              }
+            }
+          } else {
+            console.error('❌ No Clerk token available')
+            setError('Authentication token not available')
+          }
+        } else {
+          console.log('ℹ️ No pending registration found for:', user.primaryEmailAddress.emailAddress)
+        }
+      } catch (err) {
+        console.error('❌ Error completing registration:', err)
+      } finally {
+        // Always try to load profile after attempting completion
+        loadDriverProfile()
+      }
+    }
+
+    completePendingRegistration()
+  }, [isLoaded, user, router, getToken])
 
   const loadDriverProfile = async () => {
     try {
@@ -105,10 +175,12 @@ export default function DriverDashboard() {
         setFormData({
           name: response.data.name || "",
           phoneNumber: response.data.phoneNumber || "",
-          rcNumber: response.data.rcNumber || "",
-          rcImage: response.data.rcImage || "",
           dlNumber: response.data.dlNumber || "",
           dlImage: response.data.dlImage || "",
+          panNumber: response.data.panNumber || "",
+          panImage: response.data.panImage || "",
+          aadharNumber: response.data.aadharNumber || "",
+          aadharImage: response.data.aadharImage || "",
           permanentAddress: response.data.permanentAddress || "",
           operatingAddress: response.data.operatingAddress || "",
           city: response.data.city || "",
@@ -300,13 +372,21 @@ export default function DriverDashboard() {
                   <p className="text-lg font-medium text-foreground">{driverProfile.city}</p>
                 </div>
                 <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-sm font-medium text-muted-foreground">RC Number</p>
-                  <p className="text-lg font-medium text-foreground">{driverProfile.rcNumber}</p>
-                </div>
-                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
                   <p className="text-sm font-medium text-muted-foreground">DL Number</p>
                   <p className="text-lg font-medium text-foreground">{driverProfile.dlNumber}</p>
                 </div>
+                {driverProfile.panNumber && (
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                    <p className="text-sm font-medium text-muted-foreground">PAN Number</p>
+                    <p className="text-lg font-medium text-foreground">{driverProfile.panNumber}</p>
+                  </div>
+                )}
+                {driverProfile.aadharNumber && (
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                    <p className="text-sm font-medium text-muted-foreground">Aadhar Number</p>
+                    <p className="text-lg font-medium text-foreground">{driverProfile.aadharNumber}</p>
+                  </div>
+                )}
                 {driverProfile.vehicleType && (
                   <div className="rounded-xl border border-white/10 bg-white/5 p-4">
                     <p className="text-sm font-medium text-muted-foreground">Vehicle</p>
@@ -368,18 +448,6 @@ export default function DriverDashboard() {
                   </div>
                   <div>
                     <label className="mb-2 block text-sm font-medium text-muted-foreground">
-                      RC Number *
-                    </label>
-                    <Input
-                      required
-                      value={formData.rcNumber}
-                      onChange={(e) =>
-                        setFormData({ ...formData, rcNumber: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
                       DL Number *
                     </label>
                     <Input
@@ -388,6 +456,30 @@ export default function DriverDashboard() {
                       onChange={(e) =>
                         setFormData({ ...formData, dlNumber: e.target.value })
                       }
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                      PAN Number
+                    </label>
+                    <Input
+                      value={formData.panNumber}
+                      onChange={(e) =>
+                        setFormData({ ...formData, panNumber: e.target.value.toUpperCase() })
+                      }
+                      placeholder="ABCDE1234F"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                      Aadhar Number
+                    </label>
+                    <Input
+                      value={formData.aadharNumber}
+                      onChange={(e) =>
+                        setFormData({ ...formData, aadharNumber: e.target.value })
+                      }
+                      placeholder="1234-5678-9012"
                     />
                   </div>
                   <div className="sm:col-span-2">

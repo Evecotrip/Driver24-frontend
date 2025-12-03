@@ -280,3 +280,115 @@ export async function getUserBookingHistory(token: string, userId: string) {
   });
   return response.json() as Promise<ApiResponse>;
 }
+
+// ============================================
+// GUEST DRIVER REGISTRATION APIs
+// ============================================
+
+export interface GuestDriverData {
+  email: string;
+  phoneNumber: string;
+  name: string;
+  dlNumber: string;
+  dlImage?: string;
+  panNumber: string;
+  panImage?: string;
+  aadharNumber: string;
+  aadharImage?: string;
+  permanentAddress: string;
+  operatingAddress: string;
+  city: string;
+  state?: string;
+  pincode?: string;
+  experience?: number;
+  salaryExpectation?: number;
+}
+
+export interface PendingDriverResponse {
+  id: string;
+  email: string;
+  name: string;
+  city: string;
+  expiresAt: string;
+}
+
+// Register as guest driver (no auth required)
+export async function registerGuestDriver(data: GuestDriverData) {
+  const response = await fetch(`${API_BASE_URL}/api/drivers/register-guest`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return response.json() as Promise<ApiResponse<PendingDriverResponse>>;
+}
+
+// Register as guest driver with file uploads (no auth required)
+export async function registerGuestDriverWithFiles(
+  data: Omit<GuestDriverData, 'dlImage' | 'panImage' | 'aadharImage'>,
+  files: {
+    dlImage: File | null
+    panImage: File | null
+    aadharImage: File | null
+  }
+) {
+  const formData = new FormData()
+  
+  // Add text fields
+  Object.keys(data).forEach((key) => {
+    const value = data[key as keyof typeof data]
+    if (value !== undefined && value !== null) {
+      formData.append(key, value.toString())
+    }
+  })
+  
+  // Add files
+  if (files.dlImage) formData.append('dlImage', files.dlImage)
+  if (files.panImage) formData.append('panImage', files.panImage)
+  if (files.aadharImage) formData.append('aadharImage', files.aadharImage)
+  
+  const response = await fetch(`${API_BASE_URL}/api/drivers/register-guest`, {
+    method: 'POST',
+    // Don't set Content-Type header - browser sets it automatically with boundary
+    body: formData,
+  })
+  
+  return response.json() as Promise<ApiResponse<PendingDriverResponse>>
+}
+
+// Check if pending registration exists (no auth required)
+export async function checkPendingRegistration(email?: string, phoneNumber?: string) {
+  const params = new URLSearchParams();
+  if (email) params.append('email', email);
+  if (phoneNumber) params.append('phoneNumber', phoneNumber);
+  
+  const response = await fetch(`${API_BASE_URL}/api/drivers/pending?${params}`);
+  return response.json() as Promise<ApiResponse<PendingDriverResponse>>;
+}
+
+// Complete driver registration after Clerk auth (requires Clerk token)
+export async function completeDriverRegistration(clerkToken: string, email: string) {
+  console.log('🔄 Completing driver registration for:', email);
+  console.log('🔑 Clerk token:', clerkToken ? 'Present' : 'Missing');
+  
+  const response = await fetch(`${API_BASE_URL}/api/auth/complete-driver-registration`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${clerkToken}`,
+    },
+    body: JSON.stringify({ email }),
+  });
+  
+  const data = await response.json();
+  console.log('📥 Backend response:', {
+    status: response.status,
+    ok: response.ok,
+    data
+  });
+  
+  return data as ApiResponse<{
+    user: any;
+    driver: any;
+    token: string;
+  }>;
+}
