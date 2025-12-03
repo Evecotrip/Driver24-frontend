@@ -46,8 +46,108 @@ export default function GuestDriverRegistration() {
     salaryExpectation: undefined as number | undefined,
   })
 
+  // Field-level errors
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+
   const handleInputChange = (field: string, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
+    // Clear field error when user starts typing
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => ({ ...prev, [field]: "" }))
+    }
+  }
+
+  const validateField = (field: string, value: any): string => {
+    switch (field) {
+      case "email":
+        if (!value) return "Email is required"
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (!emailRegex.test(value)) return "Please enter a valid email address"
+        return ""
+      
+      case "phoneNumber":
+        if (!value) return "Phone number is required"
+        const phoneRegex = /^[6-9]\d{9}$/
+        const cleanPhone = value.replace(/[\s\-\(\)]/g, '')
+        if (!phoneRegex.test(cleanPhone)) return "Enter valid 10-digit number starting with 6-9"
+        return ""
+      
+      case "firstName":
+        if (!value) return "First name is required"
+        if (value.trim().length < 2) return "First name must be at least 2 characters"
+        if (!/^[a-zA-Z]+$/.test(value.trim())) return "First name should only contain letters"
+        return ""
+      
+      case "lastName":
+        if (!value) return "Last name is required"
+        if (value.trim().length < 2) return "Last name must be at least 2 characters"
+        if (!/^[a-zA-Z]+$/.test(value.trim())) return "Last name should only contain letters"
+        return ""
+      
+      case "dlNumber":
+        if (!value) return "DL number is required"
+        const dlRegex = /^[A-Z]{2}[-\s]?\d{2}[-\s]?\d{4}[-\s]?\d{7}$/
+        if (!dlRegex.test(value.toUpperCase())) return "Invalid DL format (e.g., MH01-20230001234)"
+        return ""
+      
+      case "panNumber":
+        if (!value) return "PAN number is required"
+        const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/
+        if (!panRegex.test(value.toUpperCase())) return "Invalid PAN format (e.g., ABCDE1234F)"
+        return ""
+      
+      case "aadharNumber":
+        if (!value) return "Aadhar number is required"
+        const cleanAadhar = value.replace(/[\s\-]/g, '')
+        const aadharRegex = /^\d{12}$/
+        if (!aadharRegex.test(cleanAadhar)) return "Enter valid 12-digit Aadhar number"
+        return ""
+      
+      case "permanentAddress":
+        if (!value) return "Permanent address is required"
+        if (value.trim().length < 10) return "Address must be at least 10 characters"
+        return ""
+      
+      case "operatingAddress":
+        if (!value) return "Operating address is required"
+        if (value.trim().length < 10) return "Address must be at least 10 characters"
+        return ""
+      
+      case "city":
+        if (!value) return "City is required"
+        if (value.trim().length < 2) return "City name must be at least 2 characters"
+        if (!/^[a-zA-Z\s]+$/.test(value)) return "City should only contain letters and spaces"
+        return ""
+      
+      case "state":
+        if (!value) return "State is required"
+        if (value.trim().length < 2) return "State name must be at least 2 characters"
+        return ""
+      
+      case "pincode":
+        if (!value) return "Pincode is required"
+        if (!/^\d{6}$/.test(value)) return "Enter valid 6-digit pincode"
+        return ""
+      
+      case "experience":
+        if (value !== undefined && value < 0) return "Experience cannot be negative"
+        return ""
+      
+      case "salaryExpectation":
+        if (value !== undefined && value < 0) return "Salary cannot be negative"
+        return ""
+      
+      default:
+        return ""
+    }
+  }
+
+  const handleBlur = (field: string) => {
+    const value = formData[field as keyof typeof formData]
+    const error = validateField(field, value)
+    if (error) {
+      setFieldErrors((prev) => ({ ...prev, [field]: error }))
+    }
   }
   
   const handleFileChange = (field: "dlImage" | "panImage" | "aadharImage", file: File | null) => {
@@ -101,40 +201,31 @@ export default function GuestDriverRegistration() {
   // Removed validateStep2 - now handled in handleNext for each document step
 
   const validateStep3 = () => {
-    if (!formData.permanentAddress || !formData.operatingAddress || !formData.city) {
+    if (!formData.permanentAddress || !formData.operatingAddress || !formData.city || !formData.state || !formData.pincode) {
       setError("Please fill in all required address fields")
       return false
     }
     
-    // Address validation (at least 10 characters)
-    if (formData.permanentAddress.trim().length < 10) {
-      setError("Permanent address must be at least 10 characters long")
-      return false
-    }
-    if (formData.operatingAddress.trim().length < 10) {
-      setError("Operating address must be at least 10 characters long")
-      return false
-    }
+    const errors: Record<string, string> = {}
     
-    // City validation (at least 2 characters, only letters and spaces)
-    if (formData.city.trim().length < 2) {
-      setError("City name must be at least 2 characters long")
-      return false
-    }
-    if (!/^[a-zA-Z\s]+$/.test(formData.city)) {
-      setError("City name should only contain letters and spaces")
-      return false
-    }
+    const permanentAddressError = validateField("permanentAddress", formData.permanentAddress)
+    if (permanentAddressError) errors.permanentAddress = permanentAddressError
     
-    // Pincode validation (6 digits, optional)
-    if (formData.pincode && !/^\d{6}$/.test(formData.pincode)) {
-      setError("Please enter a valid 6-digit pincode")
-      return false
-    }
+    const operatingAddressError = validateField("operatingAddress", formData.operatingAddress)
+    if (operatingAddressError) errors.operatingAddress = operatingAddressError
     
-    // State validation (optional, but if provided should be valid)
-    if (formData.state && formData.state.trim().length < 2) {
-      setError("State name must be at least 2 characters long")
+    const cityError = validateField("city", formData.city)
+    if (cityError) errors.city = cityError
+    
+    const stateError = validateField("state", formData.state)
+    if (stateError) errors.state = stateError
+    
+    const pincodeError = validateField("pincode", formData.pincode)
+    if (pincodeError) errors.pincode = pincodeError
+    
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors)
+      setError("Please fix the errors in the form")
       return false
     }
     
@@ -145,17 +236,34 @@ export default function GuestDriverRegistration() {
     setError("")
     
     // Step 1: Personal Info
-    if (currentStep === 1 && !validateStep1()) return
+    if (currentStep === 1) {
+      const errors: Record<string, string> = {}
+      
+      const firstNameError = validateField("firstName", formData.firstName)
+      if (firstNameError) errors.firstName = firstNameError
+      
+      const lastNameError = validateField("lastName", formData.lastName)
+      if (lastNameError) errors.lastName = lastNameError
+      
+      const emailError = validateField("email", formData.email)
+      if (emailError) errors.email = emailError
+      
+      const phoneError = validateField("phoneNumber", formData.phoneNumber)
+      if (phoneError) errors.phoneNumber = phoneError
+      
+      if (Object.keys(errors).length > 0) {
+        setFieldErrors(errors)
+        setError("Please fix the errors in the form")
+        return
+      }
+    }
     
     // Step 2: DL Document
     if (currentStep === 2) {
-      if (!formData.dlNumber) {
-        setError("Please enter your DL number")
-        return
-      }
-      const dlRegex = /^[A-Z]{2}[-\s]?\d{2}[-\s]?\d{4}[-\s]?\d{7}$/
-      if (!dlRegex.test(formData.dlNumber.toUpperCase())) {
-        setError("Please enter a valid DL number (e.g., MH01-20230001234)")
+      const dlError = validateField("dlNumber", formData.dlNumber)
+      if (dlError) {
+        setFieldErrors({ dlNumber: dlError })
+        setError(dlError)
         return
       }
       if (!files.dlImage) {
@@ -166,33 +274,51 @@ export default function GuestDriverRegistration() {
     
     // Step 3: PAN Document
     if (currentStep === 3) {
-      if (!formData.panNumber) {
-        setError("Please enter your PAN number")
-        return
-      }
-      const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/
-      if (!panRegex.test(formData.panNumber.toUpperCase())) {
-        setError("Please enter a valid PAN number (e.g., ABCDE1234F)")
+      const panError = validateField("panNumber", formData.panNumber)
+      if (panError) {
+        setFieldErrors({ panNumber: panError })
+        setError(panError)
         return
       }
     }
     
     // Step 4: Aadhar Document
     if (currentStep === 4) {
-      if (!formData.aadharNumber) {
-        setError("Please enter your Aadhar number")
-        return
-      }
-      const cleanAadhar = formData.aadharNumber.replace(/[\s\-]/g, '')
-      const aadharRegex = /^\d{12}$/
-      if (!aadharRegex.test(cleanAadhar)) {
-        setError("Please enter a valid 12-digit Aadhar number")
+      const aadharError = validateField("aadharNumber", formData.aadharNumber)
+      if (aadharError) {
+        setFieldErrors({ aadharNumber: aadharError })
+        setError(aadharError)
         return
       }
     }
     
     // Step 5: Address
     if (currentStep === 5 && !validateStep3()) return
+    
+    // Step 6: Experience & Salary (now mandatory)
+    if (currentStep === 6) {
+      const errors: Record<string, string> = {}
+      
+      if (formData.experience === undefined || formData.experience === null || (typeof formData.experience === 'string' && formData.experience === "")) {
+        errors.experience = "Experience is required"
+      } else {
+        const expError = validateField("experience", formData.experience)
+        if (expError) errors.experience = expError
+      }
+      
+      if (formData.salaryExpectation === undefined || formData.salaryExpectation === null || (typeof formData.salaryExpectation === 'string' && formData.salaryExpectation === "")) {
+        errors.salaryExpectation = "Salary expectation is required"
+      } else {
+        const salaryError = validateField("salaryExpectation", formData.salaryExpectation)
+        if (salaryError) errors.salaryExpectation = salaryError
+      }
+      
+      if (Object.keys(errors).length > 0) {
+        setFieldErrors(errors)
+        setError("Please fill in all required fields")
+        return
+      }
+    }
     
     setCurrentStep((prev) => prev + 1)
   }
@@ -231,6 +357,17 @@ export default function GuestDriverRegistration() {
     // Validate Aadhar
     if (!formData.aadharNumber) {
       setError("Aadhar number is required")
+      return
+    }
+    
+    // Validate Experience & Salary
+    if (formData.experience === undefined || formData.experience === null || (typeof formData.experience === 'string' && formData.experience === "")) {
+      setError("Experience is required")
+      return
+    }
+    
+    if (formData.salaryExpectation === undefined || formData.salaryExpectation === null || (typeof formData.salaryExpectation === 'string' && formData.salaryExpectation === "")) {
+      setError("Salary expectation is required")
       return
     }
 
@@ -312,7 +449,7 @@ export default function GuestDriverRegistration() {
                 >
                   {step}
                 </div>
-                {step < 4 && (
+                {step < 6 && (
                   <div
                     className={`h-1 w-12 transition-all ${
                       currentStep > step ? "bg-primary" : "bg-white/20"
@@ -369,10 +506,15 @@ export default function GuestDriverRegistration() {
                       </label>
                       <Input
                         required
-                        placeholder="Aryan"
+                        placeholder=""
                         value={formData.firstName}
                         onChange={(e) => handleInputChange("firstName", e.target.value)}
+                        onBlur={() => handleBlur("firstName")}
+                        className={fieldErrors.firstName ? "border-red-500" : ""}
                       />
+                      {fieldErrors.firstName && (
+                        <p className="mt-1 text-xs text-red-500">{fieldErrors.firstName}</p>
+                      )}
                     </div>
                     <div>
                       <label className="mb-2 block text-sm font-medium text-muted-foreground">
@@ -380,10 +522,15 @@ export default function GuestDriverRegistration() {
                       </label>
                       <Input
                         required
-                        placeholder="Agarwal"
+                        placeholder=""
                         value={formData.lastName}
                         onChange={(e) => handleInputChange("lastName", e.target.value)}
+                        onBlur={() => handleBlur("lastName")}
+                        className={fieldErrors.lastName ? "border-red-500" : ""}
                       />
+                      {fieldErrors.lastName && (
+                        <p className="mt-1 text-xs text-red-500">{fieldErrors.lastName}</p>
+                      )}
                     </div>
                   </div>
                   <div>
@@ -393,13 +540,19 @@ export default function GuestDriverRegistration() {
                     <Input
                       required
                       type="email"
-                      placeholder="john.doe@example.com"
+                      placeholder=""
                       value={formData.email}
                       onChange={(e) => handleInputChange("email", e.target.value)}
+                      onBlur={() => handleBlur("email")}
+                      className={fieldErrors.email ? "border-red-500" : ""}
                     />
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      You'll use this email to sign in later
-                    </p>
+                    {fieldErrors.email ? (
+                      <p className="mt-1 text-xs text-red-500">{fieldErrors.email}</p>
+                    ) : (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        You'll use this email to sign in later
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="mb-2 block text-sm font-medium text-muted-foreground">
@@ -408,10 +561,15 @@ export default function GuestDriverRegistration() {
                     <Input
                       required
                       type="tel"
-                      placeholder="+91-9876543210"
+                      placeholder=""
                       value={formData.phoneNumber}
                       onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
+                      onBlur={() => handleBlur("phoneNumber")}
+                      className={fieldErrors.phoneNumber ? "border-red-500" : ""}
                     />
+                    {fieldErrors.phoneNumber && (
+                      <p className="mt-1 text-xs text-red-500">{fieldErrors.phoneNumber}</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -433,13 +591,19 @@ export default function GuestDriverRegistration() {
                     </label>
                     <Input
                       required
-                      placeholder="MH0120230001234"
+                      placeholder=""
                       value={formData.dlNumber}
                       onChange={(e) => handleInputChange("dlNumber", e.target.value)}
+                      onBlur={() => handleBlur("dlNumber")}
+                      className={fieldErrors.dlNumber ? "border-red-500" : ""}
                     />
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Format: XX##YYYYYYYYYYY (e.g., MH01-2023-0001234)
-                    </p>
+                    {fieldErrors.dlNumber ? (
+                      <p className="mt-1 text-xs text-red-500">{fieldErrors.dlNumber}</p>
+                    ) : (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Format: XX##YYYYYYYYYYY
+                      </p>
+                    )}
                   </div>
                   <FileUpload
                     label="DL Image *"
@@ -468,13 +632,19 @@ export default function GuestDriverRegistration() {
                     </label>
                     <Input
                       required
-                      placeholder="ABCDE1234F"
+                      placeholder=""
                       value={formData.panNumber}
                       onChange={(e) => handleInputChange("panNumber", e.target.value.toUpperCase())}
+                      onBlur={() => handleBlur("panNumber")}
+                      className={fieldErrors.panNumber ? "border-red-500" : ""}
                     />
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Format: ABCDE1234F (5 letters + 4 digits + 1 letter)
-                    </p>
+                    {fieldErrors.panNumber ? (
+                      <p className="mt-1 text-xs text-red-500">{fieldErrors.panNumber}</p>
+                    ) : (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Format: ABCDE1234F (5 letters + 4 digits + 1 letter)
+                      </p>
+                    )}
                   </div>
                   <FileUpload
                     label="PAN Image (Optional)"
@@ -502,13 +672,19 @@ export default function GuestDriverRegistration() {
                     </label>
                     <Input
                       required
-                      placeholder="1234-5678-9012"
+                      placeholder=""
                       value={formData.aadharNumber}
                       onChange={(e) => handleInputChange("aadharNumber", e.target.value)}
+                      onBlur={() => handleBlur("aadharNumber")}
+                      className={fieldErrors.aadharNumber ? "border-red-500" : ""}
                     />
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      12 digits (can include spaces or dashes)
-                    </p>
+                    {fieldErrors.aadharNumber ? (
+                      <p className="mt-1 text-xs text-red-500">{fieldErrors.aadharNumber}</p>
+                    ) : (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        12 digits (can include spaces or dashes)
+                      </p>
+                    )}
                   </div>
                   <FileUpload
                     label="Aadhar Image (Optional)"
@@ -536,10 +712,15 @@ export default function GuestDriverRegistration() {
                     </label>
                     <Input
                       required
-                      placeholder="123 Main Street, Locality"
+                      placeholder=""
                       value={formData.permanentAddress}
                       onChange={(e) => handleInputChange("permanentAddress", e.target.value)}
+                      onBlur={() => handleBlur("permanentAddress")}
+                      className={fieldErrors.permanentAddress ? "border-red-500" : ""}
                     />
+                    {fieldErrors.permanentAddress && (
+                      <p className="mt-1 text-xs text-red-500">{fieldErrors.permanentAddress}</p>
+                    )}
                   </div>
                   <div>
                     <label className="mb-2 block text-sm font-medium text-muted-foreground">
@@ -547,10 +728,15 @@ export default function GuestDriverRegistration() {
                     </label>
                     <Input
                       required
-                      placeholder="456 Work Street, Area"
+                      placeholder=""
                       value={formData.operatingAddress}
                       onChange={(e) => handleInputChange("operatingAddress", e.target.value)}
+                      onBlur={() => handleBlur("operatingAddress")}
+                      className={fieldErrors.operatingAddress ? "border-red-500" : ""}
                     />
+                    {fieldErrors.operatingAddress && (
+                      <p className="mt-1 text-xs text-red-500">{fieldErrors.operatingAddress}</p>
+                    )}
                   </div>
                   <div className="grid gap-6 sm:grid-cols-3">
                     <div>
@@ -559,30 +745,47 @@ export default function GuestDriverRegistration() {
                       </label>
                       <Input
                         required
-                        placeholder="Mumbai"
+                        placeholder=""
                         value={formData.city}
                         onChange={(e) => handleInputChange("city", e.target.value)}
+                        onBlur={() => handleBlur("city")}
+                        className={fieldErrors.city ? "border-red-500" : ""}
                       />
+                      {fieldErrors.city && (
+                        <p className="mt-1 text-xs text-red-500">{fieldErrors.city}</p>
+                      )}
                     </div>
                     <div>
                       <label className="mb-2 block text-sm font-medium text-muted-foreground">
-                        State
+                        State *
                       </label>
                       <Input
-                        placeholder="Maharashtra"
+                        required
+                        placeholder=""
                         value={formData.state}
                         onChange={(e) => handleInputChange("state", e.target.value)}
+                        onBlur={() => handleBlur("state")}
+                        className={fieldErrors.state ? "border-red-500" : ""}
                       />
+                      {fieldErrors.state && (
+                        <p className="mt-1 text-xs text-red-500">{fieldErrors.state}</p>
+                      )}
                     </div>
                     <div>
                       <label className="mb-2 block text-sm font-medium text-muted-foreground">
-                        Pincode
+                        Pincode *
                       </label>
                       <Input
-                        placeholder="400001"
+                        required
+                        placeholder=""
                         value={formData.pincode}
                         onChange={(e) => handleInputChange("pincode", e.target.value)}
+                        onBlur={() => handleBlur("pincode")}
+                        className={fieldErrors.pincode ? "border-red-500" : ""}
                       />
+                      {fieldErrors.pincode && (
+                        <p className="mt-1 text-xs text-red-500">{fieldErrors.pincode}</p>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -595,34 +798,46 @@ export default function GuestDriverRegistration() {
                 <CardHeader>
                   <CardTitle>Experience & Salary Expectation</CardTitle>
                   <CardDescription>
-                    Optional: Add your driving experience and salary expectations
+                    Enter your driving experience and salary expectations
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="grid gap-6 sm:grid-cols-2">
                     <div>
                       <label className="mb-2 block text-sm font-medium text-muted-foreground">
-                        Experience (years)
+                        Experience (years) *
                       </label>
                       <Input
+                        required
                         type="number"
                         min="0"
-                        placeholder="5"
+                        placeholder=""
                         value={formData.experience || ""}
                         onChange={(e) => handleInputChange("experience", e.target.value ? parseInt(e.target.value) : "")}
+                        onBlur={() => handleBlur("experience")}
+                        className={fieldErrors.experience ? "border-red-500" : ""}
                       />
+                      {fieldErrors.experience && (
+                        <p className="mt-1 text-xs text-red-500">{fieldErrors.experience}</p>
+                      )}
                     </div>
                     <div>
                       <label className="mb-2 block text-sm font-medium text-muted-foreground">
-                        Salary Expectation (₹/month)
+                        Salary Expectation (₹/month) *
                       </label>
                       <Input
+                        required
                         type="number"
                         min="0"
-                        placeholder="25000"
+                        placeholder=""
                         value={formData.salaryExpectation || ""}
                         onChange={(e) => handleInputChange("salaryExpectation", e.target.value ? parseInt(e.target.value) : "")}
+                        onBlur={() => handleBlur("salaryExpectation")}
+                        className={fieldErrors.salaryExpectation ? "border-red-500" : ""}
                       />
+                      {fieldErrors.salaryExpectation && (
+                        <p className="mt-1 text-xs text-red-500">{fieldErrors.salaryExpectation}</p>
+                      )}
                     </div>
                   </div>
                 </CardContent>
