@@ -2,12 +2,12 @@
 
 import { useUser } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Navbar } from "@/components/navbar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { selectRole } from "@/lib/api"
+import { selectRole, getUserByClerkId } from "@/lib/api"
 import { store } from "@/lib/store"
 import { AnimatedBackground } from "@/components/ui/animated-background"
 
@@ -18,6 +18,82 @@ export default function SelectRolePage() {
   const [city, setCity] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [checkingRole, setCheckingRole] = useState(true)
+
+  // Check if user already has a role on mount
+  useEffect(() => {
+    const checkExistingRole = async () => {
+      if (!user?.id) {
+        setCheckingRole(false)
+        return
+      }
+
+      try {
+        const response = await getUserByClerkId(user.id)
+        console.log(response)
+        
+        if (response.success && response.data?.user?.role) {
+          const userRole = response.data.user.role
+          
+          // If user has ADMIN role, redirect to admin dashboard
+          if (userRole === "ADMIN") {
+            if (response.data.token) {
+              store.setToken(response.data.token)
+              store.setUserData({
+                id: response.data.user.id,
+                clerkId: user.id,
+                email: response.data.user.email,
+                role: userRole,
+                city: response.data.user.city || "",
+              })
+            }
+            router.push("/dashboard/admin")
+            return
+          }
+          
+          // If user has USER role, redirect to user dashboard
+          if (userRole === "USER") {
+            if (response.data.token) {
+              store.setToken(response.data.token)
+              store.setUserData({
+                id: response.data.user.id,
+                clerkId: user.id,
+                email: response.data.user.email,
+                role: userRole,
+                city: response.data.user.city || "",
+              })
+            }
+            router.push("/dashboard/user")
+            return
+          }
+          
+          // If user has DRIVER role, redirect to driver dashboard
+          if (userRole === "DRIVER") {
+            if (response.data.token) {
+              store.setToken(response.data.token)
+              store.setUserData({
+                id: response.data.user.id,
+                clerkId: user.id,
+                email: response.data.user.email,
+                role: userRole,
+                city: response.data.user.city || "",
+              })
+            }
+            router.push("/dashboard/driver")
+            return
+          }
+        }
+      } catch (err) {
+        console.error("Error checking user role:", err)
+      } finally {
+        setCheckingRole(false)
+      }
+    }
+
+    if (isLoaded) {
+      checkExistingRole()
+    }
+  }, [user?.id, isLoaded, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -61,7 +137,7 @@ export default function SelectRolePage() {
     }
   }
 
-  if (!isLoaded) {
+  if (!isLoaded || checkingRole) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
